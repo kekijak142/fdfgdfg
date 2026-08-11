@@ -47,6 +47,14 @@ task.spawn(function()
     b(game) 
 end)
 
+-- Save original sky for the Sky Changer
+local Lighting = game:GetService("Lighting")
+local originalSky = nil
+local existingSky = Lighting:FindFirstChildOfClass("Sky")
+if existingSky then
+    originalSky = existingSky:Clone()
+end
+
 -- Wind UI Hub Loader
 local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
@@ -62,7 +70,7 @@ local Window = WindUI:CreateWindow({
     HasOutline = false
 })
 
--- Defining ALL 8 Tabs
+-- Defining ALL 9 Tabs
 local Tabs = {
     Home = Window:Tab({ Title = "Home", Icon = "home" }),
     Reach = Window:Tab({ Title = "Reach", Icon = "user" }),
@@ -71,7 +79,8 @@ local Tabs = {
     XenoMoss = Window:Tab({ Title = "Xeno Moss", Icon = "zap" }),
     FlagFunc = Window:Tab({ Title = "Flag Func", Icon = "settings" }),
     FreeWill = Window:Tab({ Title = "FreeWill", Icon = "user" }),
-    AvatarSteal = Window:Tab({ Title = "Avatar Stealer", Icon = "user" }) 
+    AvatarSteal = Window:Tab({ Title = "Avatar Stealer", Icon = "user" }),
+    SkyChanger = Window:Tab({ Title = "Sky Changer", Icon = "image" })
 }
 
 --------------------------------------------------------------------------------
@@ -761,6 +770,92 @@ Tabs.AvatarSteal:Button({
         if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
             lp.Character:FindFirstChildOfClass("Humanoid").Health = 0
             WindUI:Notify({Title = "Resetting", Content = "Respawning to restore your original avatar...", Duration = 3})
+        end
+    end
+})
+
+--------------------------------------------------------------------------------
+-- TAB 9: SKY CHANGER
+--------------------------------------------------------------------------------
+Tabs.SkyChanger:Section({ Title = "Change your environment entirely." })
+
+local SkyPresets = {
+    ["Purple Galaxy"] = {
+        SkyboxBk = "rbxassetid://159454299",
+        SkyboxDn = "rbxassetid://159454296",
+        SkyboxFt = "rbxassetid://159454293",
+        SkyboxLf = "rbxassetid://159454286",
+        SkyboxRt = "rbxassetid://159454300",
+        SkyboxUp = "rbxassetid://159454288"
+    },
+    ["Vaporwave"] = {
+        SkyboxBk = "rbxassetid://141750530",
+        SkyboxDn = "rbxassetid://141750542",
+        SkyboxFt = "rbxassetid://141750508",
+        SkyboxLf = "rbxassetid://141750519",
+        SkyboxRt = "rbxassetid://141750550",
+        SkyboxUp = "rbxassetid://141750558"
+    },
+    ["Aesthetic Night"] = {
+        SkyboxBk = "rbxassetid://1045964490",
+        SkyboxDn = "rbxassetid://1045964368",
+        SkyboxFt = "rbxassetid://1045964655",
+        SkyboxLf = "rbxassetid://1045964655",
+        SkyboxRt = "rbxassetid://1045964655",
+        SkyboxUp = "rbxassetid://1045962969"
+    },
+    ["Red Space"] = {
+        SkyboxBk = "rbxassetid://2189851600",
+        SkyboxDn = "rbxassetid://2189849202",
+        SkyboxFt = "rbxassetid://2189852232",
+        SkyboxLf = "rbxassetid://2189849503",
+        SkyboxRt = "rbxassetid://2189849896",
+        SkyboxUp = "rbxassetid://2189850383"
+    }
+}
+
+local function applySky(presetName)
+    local preset = SkyPresets[presetName]
+    if not preset then return end
+    
+    local sky = Lighting:FindFirstChildOfClass("Sky")
+    if not sky then
+        sky = Instance.new("Sky")
+        sky.Parent = Lighting
+    end
+    
+    sky.SkyboxBk = preset.SkyboxBk
+    sky.SkyboxDn = preset.SkyboxDn
+    sky.SkyboxFt = preset.SkyboxFt
+    sky.SkyboxLf = preset.SkyboxLf
+    sky.SkyboxRt = preset.SkyboxRt
+    sky.SkyboxUp = preset.SkyboxUp
+    
+    WindUI:Notify({Title = "Sky Changed", Content = "Applied " .. presetName, Duration = 2})
+end
+
+local skyOptions = {}
+for name, _ in pairs(SkyPresets) do table.insert(skyOptions, name) end
+
+Tabs.SkyChanger:Dropdown({
+    Title = "Select Skybox",
+    Values = skyOptions,
+    Value = "Purple Galaxy",
+    Callback = function(v)
+        applySky(v)
+    end
+})
+
+Tabs.SkyChanger:Button({
+    Title = "Restore Original Sky",
+    Callback = function()
+        local sky = Lighting:FindFirstChildOfClass("Sky")
+        if sky then sky:Destroy() end
+        if originalSky then
+            originalSky:Clone().Parent = Lighting
+            WindUI:Notify({Title = "Restored", Content = "Original sky restored.", Duration = 2})
+        else
+            WindUI:Notify({Title = "Error", Content = "No original sky found.", Duration = 2})
         end
     end
 })
