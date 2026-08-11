@@ -626,13 +626,14 @@ Tabs.FlagFunc:AddButton({ Title = "Stop Inject", Callback = function()
 end })
 
 --------------------------------------------------------------------------------
--- TAB 7: FREEWILL (FIXED MOVEMENT)
+-- TAB 7: FREEWILL (RESTORED MAGIC CARPET)
 --------------------------------------------------------------------------------
-Tabs.FreeWill:AddParagraph({ Title = "Freewill Auto-Kick", Content = "Auto directional kick. Aim with your camera!" })
+Tabs.FreeWill:AddParagraph({ Title = "Freewill Auto-Kick", Content = "Auto directional kick. Rides the ball based on camera." })
 
 local Camera = workspace.CurrentCamera
 local freewillLoop = nil
-local REACH_FW = 7 -- Slightly bigger reach so it feels smoother
+local REACH_FW = 5
+local HEIGHT_FW = 3.1 
 
 local function getFreewillBall()
     local tps = workspace:FindFirstChild("TPSSystem")
@@ -640,7 +641,6 @@ local function getFreewillBall()
 end
 
 local function directionalKick(hrp, ball)
-    -- Spam the touch interest to force the ball physics to launch
     for i = 1, 25 do 
         fti(hrp, ball, 0)
         fti(hrp, ball, 1) 
@@ -653,20 +653,25 @@ local function setFreewillState(state)
             local char = lp.Character
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local ball = getFreewillBall()
-            
             if hrp and ball then
-                -- Check if you are close enough to the ball to dribble/kick
+                -- Keep velocity zeroed so you don't fling off, but DO NOT anchor
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                
+                -- Teleport on top of the ball and face the camera direction
+                local camLook = Camera.CFrame.LookVector
+                hrp.CFrame = CFrame.new(
+                    ball.Position + Vector3.new(0, HEIGHT_FW, 0), 
+                    ball.Position + Vector3.new(camLook.X, HEIGHT_FW, camLook.Z)
+                )
+                
+                -- Spam kicks to launch the ball (and you) forward
                 if (hrp.Position - ball.Position).Magnitude <= REACH_FW then 
-                    -- Only rotate your character to face the camera, do NOT freeze position
-                    local camLook = Camera.CFrame.LookVector
-                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Vector3.new(camLook.X, 0, camLook.Z))
-                    
                     directionalKick(hrp, ball) 
                 end
             end
         end)
     else
-        if freewillLoop then freewillLoop:Disconnect() end
+        if freewillLoop then freewillLoop:Disconnect(); freewillLoop = nil end
     end
 end
 
