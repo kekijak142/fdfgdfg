@@ -680,16 +680,62 @@ Tabs.FreeWill:AddToggle("EnableFreewill", {
 })
 
 --------------------------------------------------------------------------------
--- TAB 8: AVATAR STEALER (GENTLE CLIENT-SIDE FIX)
+-- TAB 8: AVATAR STEALER (MANUAL FORCE-WELD FIX)
 --------------------------------------------------------------------------------
 Tabs.AvatarSteal:AddParagraph({ Title = "Steal Appearance", Content = "Enter a Username or User ID to perfectly copy their avatar." })
+
+-- Custom client-side welder to prevent hats from falling on the floor
+local function forceWeldAccessory(accessory, char)
+    local handle = accessory:FindFirstChild("Handle")
+    if not handle then return end
+    
+    handle.Anchored = false
+    handle.CanCollide = false
+    handle.Massless = true
+    
+    local handleAttachment = handle:FindFirstChildOfClass("Attachment")
+    local charPart = char:FindFirstChild("Head") -- Default fallback
+    local charAttachment = nil
+    
+    if handleAttachment then
+        -- Find the matching attachment anywhere in the character's body
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then
+                local found = part:FindFirstChild(handleAttachment.Name)
+                if found and found:IsA("Attachment") then
+                    charPart = part
+                    charAttachment = found
+                    break
+                end
+            end
+        end
+    end
+    
+    accessory.Parent = char
+    
+    local weld = Instance.new("Weld")
+    weld.Name = "AccessoryWeld"
+    weld.Part0 = charPart
+    weld.Part1 = handle
+    
+    if charAttachment and handleAttachment then
+        weld.C0 = charAttachment.CFrame
+        weld.C1 = handleAttachment.CFrame
+    else
+        -- Fallback for super old legacy hats without attachments
+        if charPart.Name == "Head" then
+            weld.C0 = CFrame.new(0, charPart.Size.Y / 2, 0)
+            weld.C1 = CFrame.new(0, -handle.Size.Y / 2, 0)
+        end
+    end
+    weld.Parent = handle
+end
 
 local function applyStolenAvatar(targetNameOrId)
     local char = lp.Character
     local humanoid = char and char:FindFirstChildOfClass("Humanoid")
     if not char or not humanoid then return end
 
-    -- Resolve the input into a valid UserId
     local successId, targetId = pcall(function() 
         return tonumber(targetNameOrId) or Players:GetUserIdFromNameAsync(targetNameOrId) 
     end)
@@ -699,32 +745,30 @@ local function applyStolenAvatar(targetNameOrId)
         return 
     end
 
-    -- Fetch the raw appearance model directly
     local successApp, appearanceModel = pcall(function()
         return Players:GetCharacterAppearanceAsync(targetId)
     end)
 
     if successApp and appearanceModel then
-        -- 1. Gently hide old appearance instead of destroying vital meshes
+        -- 1. Gently hide old appearance
         for _, obj in pairs(char:GetChildren()) do
-            if obj:IsA("Accessory") then
-                -- Make old accessories invisible so we don't break game physics/hitboxes
+            if obj:IsA("Accoutrement") or obj:IsA("Accessory") then
                 local handle = obj:FindFirstChild("Handle")
                 if handle then handle.Transparency = 1 end
             elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("ShirtGraphic") or obj:IsA("BodyColors") then
-                obj:Destroy() -- These are safe to destroy
+                obj:Destroy() 
             end
         end
 
-        -- 2. Carefully apply the stolen items
+        -- 2. Forcefully apply the stolen items with our custom welder
         for _, item in pairs(appearanceModel:GetChildren()) do
-            if item:IsA("Accessory") then
-                -- AddAccessory safely welds it without breaking joints
-                humanoid:AddAccessory(item)
+            if item:IsA("Accoutrement") or item:IsA("Accessory") then
+                -- Use our custom weld function instead of standard parenting
+                forceWeldAccessory(item, char)
+                
             elseif item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") then
                 item.Parent = char
             elseif item:IsA("Decal") and (item.Name == "face" or item.Name == "Face") then
-                -- Apply stolen face
                 local head = char:FindFirstChild("Head")
                 if head then
                     local currentFace = head:FindFirstChildOfClass("Decal")
@@ -734,7 +778,7 @@ local function applyStolenAvatar(targetNameOrId)
             end
         end
         
-        Fluent:Notify({Title = "Success", Content = "Stole avatar smoothly!", Duration = 3})
+        Fluent:Notify({Title = "Success", Content = "Stole avatar! Hair/Hats force-welded successfully.", Duration = 3})
     else
         Fluent:Notify({Title = "Error", Content = "Failed to load appearance data.", Duration = 3})
     end
