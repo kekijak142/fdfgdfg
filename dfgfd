@@ -78,7 +78,7 @@ local Tabs = {
     XenoMoss = Window:AddTab({ Title = "Xeno Moss", Icon = "zap" }),
     FlagFunc = Window:AddTab({ Title = "Flag Func", Icon = "settings" }),
     FreeWill = Window:AddTab({ Title = "FreeWill", Icon = "user" }),
-    AvatarSteal = Window:AddTab({ Title = "Avatar Stealer", Icon = "user" }) -- New Tab Added Here
+    AvatarSteal = Window:AddTab({ Title = "Avatar Stealer", Icon = "user" }) 
 }
 
 local Options = Fluent.Options
@@ -626,7 +626,7 @@ Tabs.FlagFunc:AddButton({ Title = "Stop Inject", Callback = function()
 end })
 
 --------------------------------------------------------------------------------
--- TAB 7: FREEWILL (FIXED)
+-- TAB 7: FREEWILL
 --------------------------------------------------------------------------------
 Tabs.FreeWill:AddParagraph({ Title = "Freewill Auto-Kick", Content = "Auto directional kick." })
 
@@ -641,7 +641,6 @@ local function getFreewillBall()
 end
 
 local function directionalKick(hrp, ball)
-    -- Firetouchinterest 25 times is perfect for enforcing the claim over the ball
     for i = 1, 25 do fti(hrp, ball, 0); fti(hrp, ball, 1) end
 end
 
@@ -652,7 +651,6 @@ local function setFreewillState(state)
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local ball = getFreewillBall()
             if hrp and ball then
-                -- Apply the anchor fix here to prevent jitter
                 hrp.Anchored = true 
                 hrp.AssemblyLinearVelocity = Vector3.zero
                 
@@ -670,7 +668,6 @@ local function setFreewillState(state)
     else
         if freewillLoop then freewillLoop:Disconnect() end
         if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
-            -- Unanchor when turned off so you can move normally
             lp.Character.HumanoidRootPart.Anchored = false
         end
     end
@@ -683,15 +680,13 @@ Tabs.FreeWill:AddToggle("EnableFreewill", {
 })
 
 --------------------------------------------------------------------------------
--- TAB 8: AVATAR STEALER (NEW)
+-- TAB 8: AVATAR STEALER (FIXED FOR CLIENT-SIDE)
 --------------------------------------------------------------------------------
 Tabs.AvatarSteal:AddParagraph({ Title = "Steal Appearance", Content = "Enter a Username or User ID to perfectly copy their avatar." })
 
 local function applyStolenAvatar(targetNameOrId)
     local char = lp.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    
-    if not humanoid then return end
+    if not char then return end
 
     -- Resolve the input into a valid UserId
     local successId, targetId = pcall(function() 
@@ -703,16 +698,28 @@ local function applyStolenAvatar(targetNameOrId)
         return 
     end
 
-    -- Fetch their appearance and apply it
-    local successDesc, desc = pcall(function() 
-        return Players:GetHumanoidDescriptionFromUserId(targetId) 
+    -- Fetch the raw appearance model directly (works on client!)
+    local successApp, appearanceModel = pcall(function()
+        return Players:GetCharacterAppearanceAsync(targetId)
     end)
-    
-    if successDesc and desc then
-        humanoid:ApplyDescription(desc)
+
+    if successApp and appearanceModel then
+        -- 1. Strip current clothing and accessories
+        for _, obj in pairs(char:GetChildren()) do
+            if obj:IsA("Accessory") or obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("ShirtGraphic") or obj:IsA("CharacterMesh") or obj:IsA("BodyColors") then
+                obj:Destroy()
+            end
+        end
+
+        -- 2. Apply the stolen items
+        for _, item in pairs(appearanceModel:GetChildren()) do
+            -- Parent them to your character
+            item.Parent = char
+        end
+        
         Fluent:Notify({Title = "Success", Content = "Stole avatar successfully!", Duration = 3})
     else
-        Fluent:Notify({Title = "Error", Content = "Failed to load appearance.", Duration = 3})
+        Fluent:Notify({Title = "Error", Content = "Failed to load appearance data.", Duration = 3})
     end
 end
 
@@ -721,7 +728,7 @@ Tabs.AvatarSteal:AddInput("AvatarTargetInput", {
     Default = "",
     Placeholder = "Enter Name/ID",
     Numeric = false, 
-    Finished = false, -- Triggers callback immediately on enter
+    Finished = false, 
     Callback = function(v)
         if v and v ~= "" then
             applyStolenAvatar(v)
@@ -732,11 +739,10 @@ Tabs.AvatarSteal:AddInput("AvatarTargetInput", {
 Tabs.AvatarSteal:AddButton({
     Title = "Reset to Original",
     Callback = function()
-        local successDesc, desc = pcall(function() 
-            return Players:GetHumanoidDescriptionFromUserId(lp.UserId) 
-        end)
-        if successDesc and desc and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
-            lp.Character:FindFirstChildOfClass("Humanoid"):ApplyDescription(desc)
+        -- Easiest way to reset client-side without the backend function is to just respawn
+        if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+            lp.Character:FindFirstChildOfClass("Humanoid").Health = 0
+            Fluent:Notify({Title = "Resetting", Content = "Respawning to restore your original avatar...", Duration = 3})
         end
     end
 })
