@@ -8,10 +8,8 @@ local success, result = pcall(function()
 end)
 
 local isWhitelisted = false
-
 if success and result then
     for line in string.gmatch(result, "[^\r\n]+") do
-        -- Trim spaces and check against Username
         if string.match(line, "^%s*(.-)%s*$") == lp.Name then
             isWhitelisted = true
             break
@@ -21,12 +19,11 @@ end
 
 if not isWhitelisted then
     lp:Kick("You are not whitelisted to use Ascend Premium!")
-    return -- Halts the script execution entirely
+    return
 end
 
 -- wild ass anticheat still somehow works (credits twistz my baby)
 task.spawn(function()
-    -- KeepYourHeadUp_ Bypass
     local p = workspace:FindFirstChild("FE") and workspace.FE:FindFirstChild("Actions")
     if p then
         local AC = p:FindFirstChild("KeepYourHeadUp_")
@@ -38,17 +35,11 @@ task.spawn(function()
         end
     end
 
-    -- remote revoker very weird name of the ac
-    local function a(n)
-        return string.match(n,"^[a-zA-Z]+%-%d+%a*%-%d+%a*$")~=nil
-    end
-
+    local function a(n) return string.match(n,"^[a-zA-Z]+%-%d+%a*%-%d+%a*$")~=nil end
     local function b(o)
         pcall(function()
             for _,c in pairs(o:GetChildren()) do
-                if c:IsA("RemoteEvent") and a(c.Name) then
-                    c:Destroy()
-                end
+                if c:IsA("RemoteEvent") and a(c.Name) then c:Destroy() end
                 b(c)
             end
         end)
@@ -56,50 +47,44 @@ task.spawn(function()
     b(game) 
 end)
 
--- Fluent UI Hub Loader
-local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+-- Wind UI Hub Loader
+local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
-local Window = Fluent:CreateWindow({
+local Window = WindUI:CreateWindow({
     Title = "Ascend",
-    SubTitle = "Paid Version",
-    TabWidth = 160,
+    Icon = "rbxassetid://10618928818", 
+    Author = "Paid Version",
+    Folder = "AscendHub",
     Size = UDim2.fromOffset(580, 460),
-    Acrylic = true, 
-    Theme = "Darker",
-    MinimizeKey = Enum.KeyCode.End 
+    Transparent = true,
+    Theme = "Dark",
+    SideBarWidth = 160,
+    HasOutline = false
 })
 
--- Defining ALL 8 Tabs properly
+-- Defining ALL 8 Tabs
 local Tabs = {
-    Home = Window:AddTab({ Title = "Home", Icon = "home" }),
-    Reach = Window:AddTab({ Title = "Reach", Icon = "user" }),
-    XenoSolara = Window:AddTab({ Title = "Xeno & Solara Reach", Icon = "code" }),
-    React = Window:AddTab({ Title = "React", Icon = "smile" }),
-    XenoMoss = Window:AddTab({ Title = "Xeno Moss", Icon = "zap" }),
-    FlagFunc = Window:AddTab({ Title = "Flag Func", Icon = "settings" }),
-    FreeWill = Window:AddTab({ Title = "FreeWill", Icon = "user" }),
-    AvatarSteal = Window:AddTab({ Title = "Avatar Stealer", Icon = "user" }) 
+    Home = Window:Tab({ Title = "Home", Icon = "home" }),
+    Reach = Window:Tab({ Title = "Reach", Icon = "user" }),
+    XenoSolara = Window:Tab({ Title = "Xeno & Solara", Icon = "code" }),
+    React = Window:Tab({ Title = "React", Icon = "smile" }),
+    XenoMoss = Window:Tab({ Title = "Xeno Moss", Icon = "zap" }),
+    FlagFunc = Window:Tab({ Title = "Flag Func", Icon = "settings" }),
+    FreeWill = Window:Tab({ Title = "FreeWill", Icon = "user" }),
+    AvatarSteal = Window:Tab({ Title = "Avatar Stealer", Icon = "user" }) 
 }
-
-local Options = Fluent.Options
 
 --------------------------------------------------------------------------------
 -- TAB 1: HOME
 --------------------------------------------------------------------------------
-Tabs.Home:AddParagraph({
-    Title = "Join our Discord",
-    Content = "Join server: https://discord.gg/grtaeN2qG"
-})
+Tabs.Home:Section({ Title = "Join our Discord" })
+Tabs.Home:Label({ Title = "Join server: https://discord.gg/grtaeN2qG" })
 
-Tabs.Home:AddParagraph({
-    Title = "Credits",
-    Content = "Script is made by :\n@kimidev\n@savv"
-})
+Tabs.Home:Section({ Title = "Credits" })
+Tabs.Home:Label({ Title = "Script is made by :\n@kimidev\n@savv" })
 
-Tabs.Home:AddParagraph({
-    Title = "Updates",
-    Content = "soon..."
-})
+Tabs.Home:Section({ Title = "Updates" })
+Tabs.Home:Label({ Title = "soon..." })
 
 --------------------------------------------------------------------------------
 -- GLOBAL VARIABLES FOR LOGIC
@@ -112,22 +97,19 @@ local sqrt       = math.sqrt
 local clock      = os.clock
 local V3         = Vector3.new
 local V3zero     = Vector3.zero
-local MAT_AIR    = Enum.Material.Air
 
 --------------------------------------------------------------------------------
 -- TAB 2: REACH
 --------------------------------------------------------------------------------
-Tabs.Reach:AddParagraph({
-    Title = "Reach [Method 1]",
-    Content = "NOT Xeno & Solara Support"
-})
+Tabs.Reach:Section({ Title = "Reach [Method 1] (NOT Xeno/Solara)" })
 
 local e_reach1 = false
 local d_reach1 = 1
 local c_reach1
 
-Tabs.Reach:AddToggle("EnableReachM1", {
-    Title = "Enable / Disable Reach [M1]",
+Tabs.Reach:Toggle({
+    Title = "Enable Reach [M1]",
+    Desc = "Toggle Method 1 Reach",
     Default = false,
     Callback = function(v)
         e_reach1 = v
@@ -158,20 +140,15 @@ Tabs.Reach:AddToggle("EnableReachM1", {
     end
 })
 
-Tabs.Reach:AddInput("ReachSizeM1", {
+Tabs.Reach:Input({
     Title = "Reach Size",
-    Default = "1",
     Placeholder = "Size",
-    Numeric = true,
     Callback = function(v)
         d_reach1 = tonumber(v) or d_reach1
     end
 })
 
-Tabs.Reach:AddParagraph({
-    Title = "Reach [Method 2]",
-    Content = "NOT Xeno & Solara Support"
-})
+Tabs.Reach:Section({ Title = "Reach [Method 2] (NOT Xeno/Solara)" })
 
 local reachSize      = Vector3.new(5,5,5)
 local legReachEnabled = false
@@ -288,11 +265,10 @@ local function stopReach2()
     reachPart.CFrame = CFrame.new(0,-9999,0)
 end
 
-Tabs.Reach:AddDropdown("ShapeDrop", {
+Tabs.Reach:Dropdown({
     Title = "Select Shape",
     Values = {"Box","Sphere","Cylinder"},
-    Multi = false,
-    Default = 1,
+    Value = "Box",
     Callback = function(v)
         shapeType = v
         if shapeType=="Box" then reachPart.Shape=Enum.PartType.Block
@@ -302,7 +278,7 @@ Tabs.Reach:AddDropdown("ShapeDrop", {
     end
 })
 
-Tabs.Reach:AddToggle("EnableReachM2", {
+Tabs.Reach:Toggle({
     Title = "Enable Reach [M2]",
     Default = false,
     Callback = function(v)
@@ -311,21 +287,19 @@ Tabs.Reach:AddToggle("EnableReachM2", {
     end
 })
 
-Tabs.Reach:AddSlider("ReachX", { Title = "Reach X", Description = "", Default = 5, Min = 1, Max = 50, Rounding = 0, Callback = function(v) reachSize=Vector3.new(v,reachSize.Y,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
-Tabs.Reach:AddSlider("ReachY", { Title = "Reach Y", Description = "", Default = 5, Min = 1, Max = 50, Rounding = 0, Callback = function(v) reachSize=Vector3.new(reachSize.X,v,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
-Tabs.Reach:AddSlider("ReachZ", { Title = "Reach Z", Description = "", Default = 5, Min = 1, Max = 50, Rounding = 0, Callback = function(v) reachSize=Vector3.new(reachSize.X,reachSize.Y,v); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
+Tabs.Reach:Slider({ Title = "Reach X", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(v,reachSize.Y,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
+Tabs.Reach:Slider({ Title = "Reach Y", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(reachSize.X,v,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
+Tabs.Reach:Slider({ Title = "Reach Z", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(reachSize.X,reachSize.Y,v); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
 
-Tabs.Reach:AddInput("SyncReachXYZ", {
+Tabs.Reach:Input({
     Title = "Sync Reach X Y Z",
-    Default = "",
     Placeholder = "Size",
-    Numeric = true,
     Callback = function(v)
         local n=tonumber(v); if n then reachSize=Vector3.new(n,n,n); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end
     end
 })
 
-Tabs.Reach:AddToggle("HideBoxM2", {
+Tabs.Reach:Toggle({
     Title = "Hide Box",
     Default = false,
     Callback = function(v)
@@ -337,7 +311,7 @@ Tabs.Reach:AddToggle("HideBoxM2", {
 --------------------------------------------------------------------------------
 -- TAB 3: XENO & SOLARA REACH
 --------------------------------------------------------------------------------
-Tabs.XenoSolara:AddParagraph({ Title = "Xeno & Solara Reach", Content = "Best Reach Method Provided" })
+Tabs.XenoSolara:Section({ Title = "Best Reach Method Provided" })
 
 local reachEnabled3 = false
 local shouldReEnable3 = false
@@ -421,7 +395,7 @@ lp.CharacterAdded:Connect(function()
     end
 end)
 
-Tabs.XenoSolara:AddToggle("EnableReachXeno", {
+Tabs.XenoSolara:Toggle({
     Title = "Enable / Disable Reach",
     Default = false,
     Callback = function(v)
@@ -429,9 +403,9 @@ Tabs.XenoSolara:AddToggle("EnableReachXeno", {
     end
 })
 
-Tabs.XenoSolara:AddSlider("ReachSizeXeno", { Title = "Reach Size", Default = 16, Min = 1, Max = 25, Rounding = 0, Callback = function(v) reachDistance3 = v end })
+Tabs.XenoSolara:Slider({ Title = "Reach Size", Step = 1, Value = {Min = 1, Max = 25, Default = 16}, Callback = function(v) reachDistance3 = v end })
 
-Tabs.XenoSolara:AddButton({
+Tabs.XenoSolara:Button({
     Title = "Fake Legs",
     Callback = function()
         local character = lp.Character or lp.CharacterAdded:Wait()
@@ -465,7 +439,7 @@ Tabs.XenoSolara:AddButton({
 --------------------------------------------------------------------------------
 -- TAB 4: REACT
 --------------------------------------------------------------------------------
-Tabs.React:AddParagraph({ Title = "React", Content = "15% = highest delay (safer), 100% = lowest delay (most aggressive)." })
+Tabs.React:Section({ Title = "15% = highest delay (safer), 100% = lowest delay (most aggressive)." })
 
 local function applyReact(tt, interp)
     local function strip(k) return k:gsub("^DFInt",""):gsub("^DFFlag",""):gsub("FString",""):gsub("FLog",""):gsub("^FFlag",""):gsub("^DFint",""):gsub("^FInt","") end
@@ -482,19 +456,19 @@ local function applyReact(tt, interp)
     end)
 end
 
-Tabs.React:AddButton({ Title = "React 15%", Callback = function() applyReact("13","90") end })
-Tabs.React:AddButton({ Title = "React 25%", Callback = function() applyReact("12","85") end })
-Tabs.React:AddButton({ Title = "React 50%", Callback = function() applyReact("10","75") end })
-Tabs.React:AddButton({ Title = "React 75%", Callback = function() applyReact("8","67") end })
-Tabs.React:AddButton({ Title = "React 100%", Callback = function() applyReact("7","60") end })
+Tabs.React:Button({ Title = "React 15%", Callback = function() applyReact("13","90") end })
+Tabs.React:Button({ Title = "React 25%", Callback = function() applyReact("12","85") end })
+Tabs.React:Button({ Title = "React 50%", Callback = function() applyReact("10","75") end })
+Tabs.React:Button({ Title = "React 75%", Callback = function() applyReact("8","67") end })
+Tabs.React:Button({ Title = "React 100%", Callback = function() applyReact("7","60") end })
 
 --------------------------------------------------------------------------------
 -- TAB 5: XENO MOSS
 --------------------------------------------------------------------------------
-Tabs.XenoMoss:AddParagraph({ Title = "Xeno Moss", Content = "Moss for Xeno & Solara. Pick your %. Higher % = bigger hitbox." })
+Tabs.XenoMoss:Section({ Title = "Moss for Xeno & Solara. Pick your %. Higher % = bigger hitbox." })
 
 local function createMossButton(title, bx, by, bz)
-    Tabs.XenoMoss:AddButton({
+    Tabs.XenoMoss:Button({
         Title = title,
         Callback = function()
             local BOX_X=bx; local BOX_Y=by; local BOX_Z=bz; local BOX_Y_OFFSET=1.5
@@ -556,7 +530,7 @@ createMossButton("Xeno Moss 100%", 4, 5, 4.5)
 --------------------------------------------------------------------------------
 -- TAB 6: FLAG FUNC
 --------------------------------------------------------------------------------
-Tabs.FlagFunc:AddParagraph({ Title = "Flag Override", Content = "Override specific flags easily." })
+Tabs.FlagFunc:Section({ Title = "Override specific flags easily." })
 
 local _flags = {tt="4", interp="60", s2="38720"}
 local _thread_flag = nil
@@ -576,26 +550,25 @@ local function applyFlags()
     end
 end
 
-Tabs.FlagFunc:AddInput("TargetTimeDelay", { Title = "TargetTimeDelay", Default = "", Placeholder = "e.g. 4", Callback = function(v) if v and v ~= "" then _flags.tt = v end end })
-Tabs.FlagFunc:AddInput("Interpolation", { Title = "Interpolation", Default = "", Placeholder = "e.g. 60", Callback = function(v) if v and v ~= "" then _flags.interp = v end end })
-Tabs.FlagFunc:AddInput("PhysicsSenderRate", { Title = "PhysicsSenderRate", Default = "", Placeholder = "e.g. 38720", Callback = function(v) if v and v ~= "" then _flags.s2 = v end end })
+Tabs.FlagFunc:Input({ Title = "TargetTimeDelay", Placeholder = "e.g. 4", Callback = function(v) if v and v ~= "" then _flags.tt = v end end })
+Tabs.FlagFunc:Input({ Title = "Interpolation", Placeholder = "e.g. 60", Callback = function(v) if v and v ~= "" then _flags.interp = v end end })
+Tabs.FlagFunc:Input({ Title = "PhysicsSenderRate", Placeholder = "e.g. 38720", Callback = function(v) if v and v ~= "" then _flags.s2 = v end end })
 
-Tabs.FlagFunc:AddButton({ Title = "Apply & Lock", Callback = function()
+Tabs.FlagFunc:Button({ Title = "Apply & Lock", Callback = function()
     if _thread_flag then task.cancel(_thread_flag) end
     _thread_flag = task.spawn(function() while true do applyFlags() task.wait(2) end end)
 end })
-Tabs.FlagFunc:AddButton({ Title = "Unlock", Callback = function()
+Tabs.FlagFunc:Button({ Title = "Unlock", Callback = function()
     if _thread_flag then task.cancel(_thread_flag); _thread_flag = nil end
 end })
 
-Tabs.FlagFunc:AddParagraph({ Title = "Flag Inject", Content = "Paste your JSON flags below. Format: {\"FlagName\":\"value\"}" })
+Tabs.FlagFunc:Section({ Title = "Paste your JSON flags below." })
 
 local _injectThread = nil
 local _injectFlags  = {}
 
-Tabs.FlagFunc:AddInput("FlagJSON", {
+Tabs.FlagFunc:Input({
     Title = "Flag JSON",
-    Default = "",
     Placeholder = '{"DFIntTargetTimeDelayFacctorTenths":"7"}',
     Callback = function(v)
         if not v or v == "" then return end
@@ -604,7 +577,7 @@ Tabs.FlagFunc:AddInput("FlagJSON", {
     end
 })
 
-Tabs.FlagFunc:AddButton({ Title = "Inject & Lock All", Callback = function()
+Tabs.FlagFunc:Button({ Title = "Inject & Lock All", Callback = function()
     if _injectThread then task.cancel(_injectThread) end
     _injectThread = task.spawn(function()
         while true do
@@ -621,14 +594,14 @@ Tabs.FlagFunc:AddButton({ Title = "Inject & Lock All", Callback = function()
     end)
 end })
 
-Tabs.FlagFunc:AddButton({ Title = "Stop Inject", Callback = function()
+Tabs.FlagFunc:Button({ Title = "Stop Inject", Callback = function()
     if _injectThread then task.cancel(_injectThread); _injectThread = nil end
 end })
 
 --------------------------------------------------------------------------------
--- TAB 7: FREEWILL (RESTORED MAGIC CARPET)
+-- TAB 7: FREEWILL
 --------------------------------------------------------------------------------
-Tabs.FreeWill:AddParagraph({ Title = "Freewill Auto-Kick", Content = "Auto directional kick. Rides the ball based on camera." })
+Tabs.FreeWill:Section({ Title = "Auto directional kick. Rides the ball based on camera." })
 
 local Camera = workspace.CurrentCamera
 local freewillLoop = nil
@@ -654,17 +627,12 @@ local function setFreewillState(state)
             local hrp = char and char:FindFirstChild("HumanoidRootPart")
             local ball = getFreewillBall()
             if hrp and ball then
-                -- Keep velocity zeroed so you don't fling off, but DO NOT anchor
                 hrp.AssemblyLinearVelocity = Vector3.zero
-                
-                -- Teleport on top of the ball and face the camera direction
                 local camLook = Camera.CFrame.LookVector
                 hrp.CFrame = CFrame.new(
                     ball.Position + Vector3.new(0, HEIGHT_FW, 0), 
                     ball.Position + Vector3.new(camLook.X, HEIGHT_FW, camLook.Z)
                 )
-                
-                -- Spam kicks to launch the ball (and you) forward
                 if (hrp.Position - ball.Position).Magnitude <= REACH_FW then 
                     directionalKick(hrp, ball) 
                 end
@@ -675,18 +643,17 @@ local function setFreewillState(state)
     end
 end
 
-Tabs.FreeWill:AddToggle("EnableFreewill", {
+Tabs.FreeWill:Toggle({
     Title = "Enable Freewill",
     Default = false,
     Callback = function(state) setFreewillState(state) end
 })
 
 --------------------------------------------------------------------------------
--- TAB 8: AVATAR STEALER (MANUAL FORCE-WELD FIX)
+-- TAB 8: AVATAR STEALER
 --------------------------------------------------------------------------------
-Tabs.AvatarSteal:AddParagraph({ Title = "Steal Appearance", Content = "Enter a Username or User ID to perfectly copy their avatar." })
+Tabs.AvatarSteal:Section({ Title = "Enter a Username or User ID to steal avatar." })
 
--- Custom client-side welder to prevent hats from falling on the floor
 local function forceWeldAccessory(accessory, char)
     local handle = accessory:FindFirstChild("Handle")
     if not handle then return end
@@ -696,11 +663,10 @@ local function forceWeldAccessory(accessory, char)
     handle.Massless = true
     
     local handleAttachment = handle:FindFirstChildOfClass("Attachment")
-    local charPart = char:FindFirstChild("Head") -- Default fallback
+    local charPart = char:FindFirstChild("Head") 
     local charAttachment = nil
     
     if handleAttachment then
-        -- Find the matching attachment anywhere in the character's body
         for _, part in pairs(char:GetChildren()) do
             if part:IsA("BasePart") then
                 local found = part:FindFirstChild(handleAttachment.Name)
@@ -714,7 +680,6 @@ local function forceWeldAccessory(accessory, char)
     end
     
     accessory.Parent = char
-    
     local weld = Instance.new("Weld")
     weld.Name = "AccessoryWeld"
     weld.Part0 = charPart
@@ -724,7 +689,6 @@ local function forceWeldAccessory(accessory, char)
         weld.C0 = charAttachment.CFrame
         weld.C1 = handleAttachment.CFrame
     else
-        -- Fallback for super old legacy hats without attachments
         if charPart.Name == "Head" then
             weld.C0 = CFrame.new(0, charPart.Size.Y / 2, 0)
             weld.C1 = CFrame.new(0, -handle.Size.Y / 2, 0)
@@ -743,7 +707,7 @@ local function applyStolenAvatar(targetNameOrId)
     end)
     
     if not successId or not targetId then 
-        Fluent:Notify({Title = "Error", Content = "Could not find user: " .. tostring(targetNameOrId), Duration = 3})
+        WindUI:Notify({Title = "Error", Content = "Could not find user: " .. tostring(targetNameOrId), Duration = 3})
         return 
     end
 
@@ -752,7 +716,6 @@ local function applyStolenAvatar(targetNameOrId)
     end)
 
     if successApp and appearanceModel then
-        -- 1. Gently hide old appearance
         for _, obj in pairs(char:GetChildren()) do
             if obj:IsA("Accoutrement") or obj:IsA("Accessory") then
                 local handle = obj:FindFirstChild("Handle")
@@ -762,12 +725,9 @@ local function applyStolenAvatar(targetNameOrId)
             end
         end
 
-        -- 2. Forcefully apply the stolen items with our custom welder
         for _, item in pairs(appearanceModel:GetChildren()) do
             if item:IsA("Accoutrement") or item:IsA("Accessory") then
-                -- Use our custom weld function instead of standard parenting
                 forceWeldAccessory(item, char)
-                
             elseif item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") then
                 item.Parent = char
             elseif item:IsA("Decal") and (item.Name == "face" or item.Name == "Face") then
@@ -779,19 +739,15 @@ local function applyStolenAvatar(targetNameOrId)
                 end
             end
         end
-        
-        Fluent:Notify({Title = "Success", Content = "Stole avatar! Hair/Hats force-welded successfully.", Duration = 3})
+        WindUI:Notify({Title = "Success", Content = "Stole avatar! Force-welded successfully.", Duration = 3})
     else
-        Fluent:Notify({Title = "Error", Content = "Failed to load appearance data.", Duration = 3})
+        WindUI:Notify({Title = "Error", Content = "Failed to load appearance data.", Duration = 3})
     end
 end
 
-Tabs.AvatarSteal:AddInput("AvatarTargetInput", {
+Tabs.AvatarSteal:Input({
     Title = "Target Username / ID",
-    Default = "",
     Placeholder = "Enter Name/ID",
-    Numeric = false, 
-    Finished = false, 
     Callback = function(v)
         if v and v ~= "" then
             applyStolenAvatar(v)
@@ -799,20 +755,18 @@ Tabs.AvatarSteal:AddInput("AvatarTargetInput", {
     end
 })
 
-Tabs.AvatarSteal:AddButton({
+Tabs.AvatarSteal:Button({
     Title = "Reset to Original",
     Callback = function()
         if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
             lp.Character:FindFirstChildOfClass("Humanoid").Health = 0
-            Fluent:Notify({Title = "Resetting", Content = "Respawning to restore your original avatar...", Duration = 3})
+            WindUI:Notify({Title = "Resetting", Content = "Respawning to restore your original avatar...", Duration = 3})
         end
     end
 })
 
--- Build the Window
-Window:SelectTab(1)
-Fluent:Notify({
+WindUI:Notify({
     Title = "Ascend",
-    Content = "Loaded successfully! Enjoy.",
+    Content = "WindUI Injection Successful!",
     Duration = 5
 })
