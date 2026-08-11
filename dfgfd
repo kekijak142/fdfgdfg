@@ -1,15 +1,16 @@
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
+local RunService = game:GetService("RunService")
 
 -- Whitelist Verification
 local whitelistUrl = "https://raw.githubusercontent.com/kekijak142/idk/refs/heads/main/whitelist.txt"
-local success, result = pcall(function()
+local successWL, resultWL = pcall(function()
     return game:HttpGet(whitelistUrl)
 end)
 
 local isWhitelisted = false
-if success and result then
-    for line in string.gmatch(result, "[^\r\n]+") do
+if successWL and resultWL then
+    for line in string.gmatch(resultWL, "[^\r\n]+") do
         if string.match(line, "^%s*(.-)%s*$") == lp.Name then
             isWhitelisted = true
             break
@@ -18,7 +19,7 @@ if success and result then
 end
 
 if not isWhitelisted then
-    lp:Kick("You are not whitelisted to use Ascend Premium!")
+    lp:Kick("Ascend Premium: You are not whitelisted! (Attempted User: " .. lp.Name .. ")")
     return
 end
 
@@ -55,50 +56,9 @@ if existingSky then
     originalSky = existingSky:Clone()
 end
 
--- Wind UI Hub Loader
-local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
-
-local Window = WindUI:CreateWindow({
-    Title = "Ascend",
-    Icon = "rbxassetid://10618928818", 
-    Author = "Paid Version",
-    Folder = "AscendHub",
-    Size = UDim2.fromOffset(580, 460),
-    Transparent = true,
-    Theme = "Dark",
-    SideBarWidth = 160,
-    HasOutline = false
-})
-
--- Defining ALL 9 Tabs
-local Tabs = {
-    Home = Window:Tab({ Title = "Home", Icon = "home" }),
-    Reach = Window:Tab({ Title = "Reach", Icon = "user" }),
-    XenoSolara = Window:Tab({ Title = "Xeno & Solara", Icon = "code" }),
-    React = Window:Tab({ Title = "React", Icon = "smile" }),
-    XenoMoss = Window:Tab({ Title = "Xeno Moss", Icon = "zap" }),
-    FlagFunc = Window:Tab({ Title = "Flag Func", Icon = "settings" }),
-    FreeWill = Window:Tab({ Title = "FreeWill", Icon = "user" }),
-    AvatarSteal = Window:Tab({ Title = "Avatar Stealer", Icon = "user" }),
-    SkyChanger = Window:Tab({ Title = "Sky Changer", Icon = "image" })
-}
-
---------------------------------------------------------------------------------
--- TAB 1: HOME
---------------------------------------------------------------------------------
-Tabs.Home:Section({ Title = "Join our Discord" })
-Tabs.Home:Label({ Title = "Join server: https://discord.gg/grtaeN2qG" })
-
-Tabs.Home:Section({ Title = "Credits" })
-Tabs.Home:Label({ Title = "Script is made by :\n@kimidev\n@savv" })
-
-Tabs.Home:Section({ Title = "Updates" })
-Tabs.Home:Label({ Title = "soon..." })
-
 --------------------------------------------------------------------------------
 -- GLOBAL VARIABLES FOR LOGIC
 --------------------------------------------------------------------------------
-local RunService = game:GetService("RunService")
 local fti        = firetouchinterest
 local abs        = math.abs
 local clamp      = math.clamp
@@ -107,761 +67,775 @@ local clock      = os.clock
 local V3         = Vector3.new
 local V3zero     = Vector3.zero
 
---------------------------------------------------------------------------------
--- TAB 2: REACH
---------------------------------------------------------------------------------
-Tabs.Reach:Section({ Title = "Reach [Method 1] (NOT Xeno/Solara)" })
+-- Wrap the entire UI generation in a pcall to catch any WindUI syntax crashes
+local successUI, errUI = pcall(function()
 
-local e_reach1 = false
-local d_reach1 = 1
-local c_reach1
+    -- Wind UI Hub Loader
+    local WindUI = loadstring(game:HttpGet("https://tree-hub.vercel.app/api/UI/WindUI"))()
 
-Tabs.Reach:Toggle({
-    Title = "Enable Reach [M1]",
-    Desc = "Toggle Method 1 Reach",
-    Default = false,
-    Callback = function(v)
-        e_reach1 = v
-        if not v and c_reach1 then c_reach1:Disconnect(); c_reach1 = nil; return end
-        if c_reach1 then c_reach1:Disconnect() end
-        c_reach1 = RunService.RenderStepped:Connect(function()
-            local p = game.Players.LocalPlayer
-            local ch = p and p.Character
-            local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
-            local h = ch and ch:FindFirstChild("Humanoid")
-            if not (ch and hrp and h) then return end
-            local t = workspace:FindFirstChild("TPSSystem")
-            t = t and t:FindFirstChild("TPS")
-            if not t then return end
-            if (hrp.Position - t.Position).Magnitude > d_reach1 then return end
-            local pf = game.Lighting:FindFirstChild(p.Name)
-            pf = pf and pf:FindFirstChild("PreferredFoot")
-            if not pf then return end
-            local ln
-            if h.RigType == Enum.HumanoidRigType.R6 then
-                ln = (pf.Value == 1) and "Right Leg" or "Left Leg"
-            else
-                ln = (pf.Value == 1) and "RightLowerLeg" or "LeftLowerLeg"
-            end
-            local l = ch:FindFirstChild(ln)
-            if l then fti(l, t, 0); fti(l, t, 1) end
-        end)
-    end
-})
+    local Window = WindUI:CreateWindow({
+        Title = "Ascend",
+        Author = "Paid Version",
+        Folder = "AscendHub",
+        Size = UDim2.fromOffset(580, 460),
+        Transparent = true,
+        Theme = "Dark",
+        SideBarWidth = 160,
+        HasOutline = false
+    })
 
-Tabs.Reach:Input({
-    Title = "Reach Size",
-    Placeholder = "Size",
-    Callback = function(v)
-        d_reach1 = tonumber(v) or d_reach1
-    end
-})
+    -- Defining ALL 9 Tabs (Icons removed to prevent lucide parsing crashes)
+    local Tabs = {
+        Home = Window:Tab({ Title = "Home" }),
+        Reach = Window:Tab({ Title = "Reach" }),
+        XenoSolara = Window:Tab({ Title = "Xeno & Solara" }),
+        React = Window:Tab({ Title = "React" }),
+        XenoMoss = Window:Tab({ Title = "Xeno Moss" }),
+        FlagFunc = Window:Tab({ Title = "Flag Func" }),
+        FreeWill = Window:Tab({ Title = "FreeWill" }),
+        AvatarSteal = Window:Tab({ Title = "Avatar Stealer" }),
+        SkyChanger = Window:Tab({ Title = "Sky Changer" })
+    }
 
-Tabs.Reach:Section({ Title = "Reach [Method 2] (NOT Xeno/Solara)" })
+    --------------------------------------------------------------------------------
+    -- TAB 1: HOME
+    --------------------------------------------------------------------------------
+    Tabs.Home:Paragraph({ Title = "Join our Discord", Desc = "Join server: https://discord.gg/grtaeN2qG" })
+    Tabs.Home:Paragraph({ Title = "Credits", Desc = "Script is made by :\n@kimidev\n@savv" })
+    Tabs.Home:Paragraph({ Title = "Updates", Desc = "soon..." })
 
-local reachSize      = Vector3.new(5,5,5)
-local legReachEnabled = false
-local reachConn      = nil
-local shapeType      = "Box"
-local transparency2  = 0.7
+    --------------------------------------------------------------------------------
+    -- TAB 2: REACH
+    --------------------------------------------------------------------------------
+    Tabs.Reach:Paragraph({ Title = "Reach [Method 1]", Desc = "NOT Xeno & Solara Support" })
 
-local reachPart = Instance.new("Part")
-reachPart.Anchored = true; reachPart.CanCollide = false
-reachPart.Transparency = transparency2; reachPart.Color = Color3.fromRGB(0,85,255)
-reachPart.Name = "ReachPart"; reachPart.Parent = workspace
+    local e_reach1 = false
+    local d_reach1 = 1
+    local c_reach1
 
-local _root, _hum, _rleg, _lleg, _hasRleg, _hasLleg
-local function refreshChar2(char)
-    if not char then return end
-    _root    = char:FindFirstChild("HumanoidRootPart")
-    _hum     = char:FindFirstChild("Humanoid")
-    _rleg    = char:FindFirstChild("RightLowerLeg") or char:FindFirstChild("Right Leg")
-    _lleg    = char:FindFirstChild("LeftLowerLeg")  or char:FindFirstChild("Left Leg")
-    _hasRleg = _rleg ~= nil; _hasLleg = _lleg ~= nil
-end
-refreshChar2(lp.Character)
-lp.CharacterAdded:Connect(function(c) task.wait(); refreshChar2(c); c.ChildAdded:Connect(function() refreshChar2(c) end) end)
-
-local function getBall()
-    local sys = workspace:FindFirstChild("TPSSystem")
-    return (sys and sys:FindFirstChild("TPS")) or workspace:FindFirstChild("Ball")
-end
-
-local function fireLeg(ball)
-    if _root  then fti(ball,_root,0);  fti(ball,_root,1)  end
-    if _hasRleg then fti(ball,_rleg,0); fti(ball,_rleg,1) end
-    if _hasLleg then fti(ball,_lleg,0); fti(ball,_lleg,1) end
-end
-
-local BUF_MAX = 8
-local POS_BUF = {}
-for i=1,BUF_MAX do POS_BUF[i]={t=0,pos=V3zero,vel=V3zero} end
-local POS_HEAD, POS_LEN = 0, 0
-local function recordBall(ball)
-    POS_HEAD=(POS_HEAD%BUF_MAX)+1
-    local s=POS_BUF[POS_HEAD]; s.t=clock(); s.pos=ball.Position; s.vel=ball.AssemblyLinearVelocity
-    if POS_LEN<BUF_MAX then POS_LEN=POS_LEN+1 end
-end
-local function getFrame(offset) return POS_BUF[((POS_HEAD-offset-1)%BUF_MAX)+1] end
-local function smartPredict(ball, ahead)
-    if POS_LEN<2 then
-        if not ball then return V3zero,V3zero end
-        return ball.Position+ball.AssemblyLinearVelocity*ahead, ball.AssemblyLinearVelocity
-    end
-    local s2=getFrame(0); local s1=getFrame(1)
-    local dt=s2.t-s1.t; if dt<=0 then dt=0.016 end
-    local vpx=(s2.pos.X-s1.pos.X)/dt; local vpy=(s2.pos.Y-s1.pos.Y)/dt; local vpz=(s2.pos.Z-s1.pos.Z)/dt
-    local vrx=s2.vel.X; local vry=s2.vel.Y; local vrz=s2.vel.Z
-    local ddx=vrx-vpx; local ddy=vry-vpy; local ddz=vrz-vpz
-    local kb=clamp((ddx*ddx+ddy*ddy+ddz*ddz)/(35*35),0,1)
-    local blx=vpx*(1-kb)+vrx*kb; local bly=vpy*(1-kb)+vry*kb; local blz=vpz*(1-kb)+vrz*kb
-    local ax,ay,az=0,0,0
-    if POS_LEN>=3 then
-        local s0=getFrame(2); local dt0=s1.t-s0.t
-        if dt0>0 then
-            local v0x=(s1.pos.X-s0.pos.X)/dt0; local v0y=(s1.pos.Y-s0.pos.Y)/dt0; local v0z=(s1.pos.Z-s0.pos.Z)/dt0
-            local amax=120
-            ax=clamp((vpx-v0x)/dt,-amax,amax); ay=clamp((vpy-v0y)/dt,-amax,amax); az=clamp((vpz-v0z)/dt,-amax,amax)
-        end
-    end
-    local gravY=-9.8*ahead*ahead*(1-kb); local t=clamp(ahead,0.016,0.25); local half=0.5*t*t
-    return V3(s2.pos.X+blx*t+ax*half, s2.pos.Y+bly*t+ay*half+gravY, s2.pos.Z+blz*t+az*half), V3(blx,bly,blz)
-end
-
-local _cachedPing = 0.05
-local _lastPingT  = 0
-local HIGH_PING_MS = 0.10
-local GRAV_HALF_SQ = -9.8*0.5*(1/60)*(1/60)
-local INSIDE_THRESH = 2.5
-
-local function startReach2()
-    if reachConn then reachConn:Disconnect() end
-    reachPart.Size = reachSize
-    reachConn = RunService.PreSimulation:Connect(function()
-        if not _root or not _hum then return end
-        local ball = getBall(); if not ball then return end
-        local now = clock()
-        if now-_lastPingT>=2 then _lastPingT=now; _cachedPing=clamp(lp:GetNetworkPing(),0.016,0.25) end
-        local ballPos = ball.Position
-        local rootPos = _root.Position
-        local qdx=ballPos.X-rootPos.X; local qdz=ballPos.Z-rootPos.Z
-        if abs(qdx)>16 or abs(qdz)>16 then return end
-        recordBall(ball)
-        local qdy=ballPos.Y-rootPos.Y
-        local rawDist=sqrt(qdx*qdx+qdy*qdy+qdz*qdz)
-        local ahead=_cachedPing+1/60
-        local predPos,predVel
-        if _cachedPing>=HIGH_PING_MS or rawDist>=7 then
-            predPos,predVel=smartPredict(ball,ahead)
-        else
-            predPos=ballPos; predVel=ball.AssemblyLinearVelocity
-        end
-        local pvx=predVel.X; local pvy=predVel.Y; local pvz=predVel.Z
-        local farPos=V3(predPos.X+pvx*(1/60), predPos.Y+pvy*(1/60)+GRAV_HALF_SQ, predPos.Z+pvz*(1/60))
-        local rx=reachSize.X/2; local ry=reachSize.Y/2; local rz=reachSize.Z/2
-        local dx=predPos.X-rootPos.X; local dy=predPos.Y-rootPos.Y; local dz=predPos.Z-rootPos.Z
-        local fdx=farPos.X-rootPos.X;  local fdy=farPos.Y-rootPos.Y;  local fdz=farPos.Z-rootPos.Z
-        if rawDist<INSIDE_THRESH then fireLeg(ball) end
-        if (abs(dx)<=rx and abs(dy)<=ry and abs(dz)<=rz) or (abs(fdx)<=rx and abs(fdy)<=ry and abs(fdz)<=rz) then
-            fireLeg(ball)
-        end
-        reachPart.CFrame = _root.CFrame
-    end)
-end
-
-local function stopReach2()
-    if reachConn then reachConn:Disconnect(); reachConn=nil end
-    reachPart.CFrame = CFrame.new(0,-9999,0)
-end
-
-Tabs.Reach:Dropdown({
-    Title = "Select Shape",
-    Values = {"Box","Sphere","Cylinder"},
-    Value = "Box",
-    Callback = function(v)
-        shapeType = v
-        if shapeType=="Box" then reachPart.Shape=Enum.PartType.Block
-        elseif shapeType=="Sphere" then reachPart.Shape=Enum.PartType.Ball
-        elseif shapeType=="Cylinder" then reachPart.Shape=Enum.PartType.Cylinder end
-        if legReachEnabled then startReach2() end
-    end
-})
-
-Tabs.Reach:Toggle({
-    Title = "Enable Reach [M2]",
-    Default = false,
-    Callback = function(v)
-        legReachEnabled = v
-        if v then startReach2() else stopReach2() end
-    end
-})
-
-Tabs.Reach:Slider({ Title = "Reach X", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(v,reachSize.Y,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
-Tabs.Reach:Slider({ Title = "Reach Y", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(reachSize.X,v,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
-Tabs.Reach:Slider({ Title = "Reach Z", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(reachSize.X,reachSize.Y,v); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
-
-Tabs.Reach:Input({
-    Title = "Sync Reach X Y Z",
-    Placeholder = "Size",
-    Callback = function(v)
-        local n=tonumber(v); if n then reachSize=Vector3.new(n,n,n); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end
-    end
-})
-
-Tabs.Reach:Toggle({
-    Title = "Hide Box",
-    Default = false,
-    Callback = function(v)
-        transparency2 = v and 1 or 0.7
-        reachPart.Transparency = transparency2
-    end
-})
-
---------------------------------------------------------------------------------
--- TAB 3: XENO & SOLARA REACH
---------------------------------------------------------------------------------
-Tabs.XenoSolara:Section({ Title = "Best Reach Method Provided" })
-
-local reachEnabled3 = false
-local shouldReEnable3 = false
-local selectedLegName3 = "Right Leg"
-local reachDistance3 = 16
-local currentConnection3 = nil
-local storedHip3 = nil
-
-local function enableReach3()
-    if reachEnabled3 then return end
-    reachEnabled3 = true
-    shouldReEnable3 = true
-    local character = lp.Character or lp.CharacterAdded:Wait()
-    local hrp = character:WaitForChild("HumanoidRootPart")
-    local leg = character:WaitForChild(selectedLegName3)
-
-    if character:FindFirstChild("Right Leg") then character["Right Leg"].Transparency = 1 end
-    if character:FindFirstChild("Left Leg") then character["Left Leg"].Transparency = 1 end
-
-    storedHip3 = character:FindFirstChild(selectedLegName3 == "Right Leg" and "Right Hip" or "Left Hip", true)
-    if storedHip3 then storedHip3.Enabled = false end
-
-    currentConnection3 = RunService.RenderStepped:Connect(function()
-        local TPSSystem = workspace:FindFirstChild("TPSSystem")
-        local TPS = TPSSystem and TPSSystem:FindFirstChild("TPS")
-        if not TPS or not hrp or not leg then return end
-        local direction = TPS.Position - hrp.Position
-        local distance = direction.Magnitude
-        if distance <= reachDistance3 then
-            leg.CFrame = TPS.CFrame
-        else
-            leg.CFrame = CFrame.new(hrp.Position + direction.Unit * reachDistance3)
-        end
-    end)
-end
-
-local function disableReach3()
-    reachEnabled3 = false
-    shouldReEnable3 = false
-    if currentConnection3 then currentConnection3:Disconnect(); currentConnection3 = nil end
-    local character = lp.Character
-    if character then
-        if character:FindFirstChild("Right Leg") then character["Right Leg"].Transparency = 0 end
-        if character:FindFirstChild("Left Leg") then character["Left Leg"].Transparency = 0 end
-    end
-    if storedHip3 then storedHip3.Enabled = true; storedHip3 = nil end
-end
-
-lp.CharacterAdded:Connect(function()
-    reachEnabled3 = false
-    storedHip3 = nil
-    if currentConnection3 then currentConnection3:Disconnect(); currentConnection3 = nil end
-    if shouldReEnable3 then
-        task.wait(0.25) 
-        local character = lp.Character or lp.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
-        if humanoid.RigType == Enum.HumanoidRigType.R6 then
-            character["Right Leg"].Transparency = 1
-            character["Left Leg"].Transparency = 1
-            character["Left Leg"].Massless = true
-            local LeftLegM = Instance.new("Part", character)
-            LeftLegM.Name = "Left Leg"; LeftLegM.CanCollide = false; LeftLegM.Color = character["Left Leg"].Color
-            LeftLegM.Size = Vector3.new(1,2,1); LeftLegM.Locked = true; LeftLegM.Position = character["Left Leg"].Position
-            local Attachment = Instance.new("Attachment", LeftLegM)
-            Attachment.Name = "LeftFootAttachment"; Attachment.Position = Vector3.new(0,-1,0)
-            local MotorHip = Instance.new("Motor6D", character.Torso)
-            MotorHip.Name = "Fake Left Hip"; MotorHip.C0 = CFrame.new(-1,-1,0,0,0,-1,0,1,0,1,0,0); MotorHip.C1 = CFrame.new(-0.5,1,0,0,0,-1,0,1,0,1,0,0)
-            MotorHip.MaxVelocity = 0.1; MotorHip.Part0 = character.Torso; MotorHip.Part1 = LeftLegM
-
-            character["Right Leg"].Massless = true
-            local RightLegM = Instance.new("Part", character)
-            RightLegM.Name = "Right Leg"; RightLegM.CanCollide = false; RightLegM.Color = character["Right Leg"].Color
-            RightLegM.Size = Vector3.new(1,2,1); RightLegM.Locked = true; RightLegM.Position = character["Right Leg"].Position
-            local Attachment2 = Instance.new("Attachment", RightLegM)
-            Attachment2.Name = "RightFootAttachment"; Attachment2.Position = Vector3.new(0,-1,0)
-            local MotorHip2 = Instance.new("Motor6D", character.Torso)
-            MotorHip2.Name = "Fake Right Hip"; MotorHip2.C0 = CFrame.new(1,-1,0,0,0,1,0,1,0,-1,0,0); MotorHip2.C1 = CFrame.new(0.5,1,0,0,0,1,0,1,0,-1,0,0)
-            MotorHip2.MaxVelocity = 0.1; MotorHip2.Part0 = character.Torso; MotorHip2.Part1 = RightLegM
-        end
-        enableReach3()
-    end
-end)
-
-Tabs.XenoSolara:Toggle({
-    Title = "Enable / Disable Reach",
-    Default = false,
-    Callback = function(v)
-        if v then enableReach3() else disableReach3() end
-    end
-})
-
-Tabs.XenoSolara:Slider({ Title = "Reach Size", Step = 1, Value = {Min = 1, Max = 25, Default = 16}, Callback = function(v) reachDistance3 = v end })
-
-Tabs.XenoSolara:Button({
-    Title = "Fake Legs",
-    Callback = function()
-        local character = lp.Character or lp.CharacterAdded:Wait()
-        local humanoid = character:WaitForChild("Humanoid")
-        if humanoid.RigType == Enum.HumanoidRigType.R6 then
-            character["Right Leg"].Transparency = 1
-            character["Left Leg"].Transparency = 1
-            character["Left Leg"].Massless = true
-            local LeftLegM = Instance.new("Part", character)
-            LeftLegM.Name = "Left Leg"; LeftLegM.CanCollide = false; LeftLegM.Color = character["Left Leg"].Color
-            LeftLegM.Size = Vector3.new(1, 2, 1); LeftLegM.Locked = true; LeftLegM.Position = character["Left Leg"].Position
-            local LeftAttachment = Instance.new("Attachment", LeftLegM)
-            LeftAttachment.Name = "LeftFootAttachment"; LeftAttachment.Position = Vector3.new(0, -1, 0)
-            local LeftMotor = Instance.new("Motor6D", character.Torso)
-            LeftMotor.Name = "Fake Left Hip"; LeftMotor.C0 = CFrame.new(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0); LeftMotor.C1 = CFrame.new(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
-            LeftMotor.MaxVelocity = 0.1; LeftMotor.Part0 = character.Torso; LeftMotor.Part1 = LeftLegM
-
-            character["Right Leg"].Massless = true
-            local RightLegM = Instance.new("Part", character)
-            RightLegM.Name = "Right Leg"; RightLegM.CanCollide = false; RightLegM.Color = character["Right Leg"].Color
-            RightLegM.Size = Vector3.new(1, 2, 1); RightLegM.Locked = true; RightLegM.Position = character["Right Leg"].Position
-            local RightAttachment = Instance.new("Attachment", RightLegM)
-            RightAttachment.Name = "RightFootAttachment"; RightAttachment.Position = Vector3.new(0, -1, 0)
-            local RightMotor = Instance.new("Motor6D", character.Torso)
-            RightMotor.Name = "Fake Right Hip"; RightMotor.C0 = CFrame.new(1, -1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0); RightMotor.C1 = CFrame.new(0.5, 1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0)
-            RightMotor.MaxVelocity = 0.1; RightMotor.Part0 = character.Torso; RightMotor.Part1 = RightLegM
-        end
-    end
-})
-
---------------------------------------------------------------------------------
--- TAB 4: REACT
---------------------------------------------------------------------------------
-Tabs.React:Section({ Title = "15% = highest delay (safer), 100% = lowest delay (most aggressive)." })
-
-local function applyReact(tt, interp)
-    local function strip(k) return k:gsub("^DFInt",""):gsub("^DFFlag",""):gsub("FString",""):gsub("FLog",""):gsub("^FFlag",""):gsub("^DFint",""):gsub("^FInt","") end
-    task.spawn(function()
-        local flags = { ["DFIntTargetTimeDelayFacctorTenths"] = tt, ["FIntInterpolationMaxDelayMSec"] = interp }
-        local function apply()
-            if not setfflag then return end
-            for k,v in pairs(flags) do
-                local ck = strip(k)
-                pcall(function() if getfflag(ck)~=nil then setfflag(ck,v) elseif getfflag(k)~=nil then setfflag(k,v) end end)
-            end
-        end
-        while true do apply() task.wait(20) end
-    end)
-end
-
-Tabs.React:Button({ Title = "React 15%", Callback = function() applyReact("13","90") end })
-Tabs.React:Button({ Title = "React 25%", Callback = function() applyReact("12","85") end })
-Tabs.React:Button({ Title = "React 50%", Callback = function() applyReact("10","75") end })
-Tabs.React:Button({ Title = "React 75%", Callback = function() applyReact("8","67") end })
-Tabs.React:Button({ Title = "React 100%", Callback = function() applyReact("7","60") end })
-
---------------------------------------------------------------------------------
--- TAB 5: XENO MOSS
---------------------------------------------------------------------------------
-Tabs.XenoMoss:Section({ Title = "Moss for Xeno & Solara. Pick your %. Higher % = bigger hitbox." })
-
-local function createMossButton(title, bx, by, bz)
-    Tabs.XenoMoss:Button({
-        Title = title,
-        Callback = function()
-            local BOX_X=bx; local BOX_Y=by; local BOX_Z=bz; local BOX_Y_OFFSET=1.5
-            local function isBoxTouching(pCF,pSz,tCF,tSz)
-                local pMin=pCF.Position-pSz/2; local pMax=pCF.Position+pSz/2
-                local tMin=tCF.Position-tSz/2; local tMax=tCF.Position+tSz/2
-                return (pMin.X<=tMax.X and pMax.X>=tMin.X) and (pMin.Y<=tMax.Y and pMax.Y>=tMin.Y) and (pMin.Z<=tMax.Z and pMax.Z>=tMin.Z)
-            end
-            local headerAnim=Instance.new("Animation"); headerAnim.AnimationId="rbxassetid://301501585"
-            local currentTrack=nil
-            local function playHeaderAnim()
-                local char=lp.Character; if not char then return end
-                local hum=char:FindFirstChildOfClass("Humanoid"); if not hum then return end
-                if currentTrack and currentTrack.IsPlaying then return end
-                pcall(function() currentTrack=hum:LoadAnimation(headerAnim); currentTrack:Play() end)
-            end
-            local function fireKick()
-                local TPSSystem=workspace:FindFirstChild("TPSSystem")
-                local TPS=TPSSystem and TPSSystem:FindFirstChild("TPS"); if not TPS then return end
-                local FE=workspace:FindFirstChild("FE")
-                local remote=FE and FE:FindFirstChild("System") and FE.System:FindFirstChild("Header"); if not remote then return end
-                remote:FireServer(lp.UserId,TPS,"Rock'n'roll Star","NeverFearTruth","power=95/100")
-            end
-            local mossWasInside=false; local mossCooldown=false
-            RunService.Heartbeat:Connect(function()
-                local char=lp.Character; if not char then return end
-                local head=char:FindFirstChild("Head"); if not head then return end
-                local hrp=char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
-                local raisedCFrame=head.CFrame*CFrame.new(0,BOX_Y_OFFSET,0)
-                local boxSize=Vector3.new(BOX_X,BOX_Y,BOX_Z)
-                local targets={}
-                local BallsFolder=workspace:FindFirstChild("Balls")
-                if BallsFolder then for _,ball in BallsFolder:GetChildren() do if ball:IsA("BasePart") then table.insert(targets,ball) end end end
-                local TPSSystem=workspace:FindFirstChild("TPSSystem")
-                if TPSSystem then for _,tpsPart in TPSSystem:GetChildren() do if tpsPart:IsA("BasePart") or tpsPart.Name=="TPS" then table.insert(targets,tpsPart) end end end
-                local ballCurrentlyInside=false
-                for _,target in targets do
-                    local predictedPos=target.Position+target.Velocity*0.001
-                    local predictedCFrame=CFrame.new(predictedPos)*target.CFrame.Rotation
-                    if target.Position.Y>=hrp.Position.Y+1 then
-                        if isBoxTouching(raisedCFrame,boxSize,predictedCFrame,target.Size) then ballCurrentlyInside=true; break end
-                    end
+    Tabs.Reach:Toggle({
+        Title = "Enable Reach [M1]",
+        Default = false,
+        Callback = function(v)
+            e_reach1 = v
+            if not v and c_reach1 then c_reach1:Disconnect(); c_reach1 = nil; return end
+            if c_reach1 then c_reach1:Disconnect() end
+            c_reach1 = RunService.RenderStepped:Connect(function()
+                local p = game.Players.LocalPlayer
+                local ch = p and p.Character
+                local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+                local h = ch and ch:FindFirstChild("Humanoid")
+                if not (ch and hrp and h) then return end
+                local t = workspace:FindFirstChild("TPSSystem")
+                t = t and t:FindFirstChild("TPS")
+                if not t then return end
+                if (hrp.Position - t.Position).Magnitude > d_reach1 then return end
+                local pf = game.Lighting:FindFirstChild(p.Name)
+                pf = pf and pf:FindFirstChild("PreferredFoot")
+                if not pf then return end
+                local ln
+                if h.RigType == Enum.HumanoidRigType.R6 then
+                    ln = (pf.Value == 1) and "Right Leg" or "Left Leg"
+                else
+                    ln = (pf.Value == 1) and "RightLowerLeg" or "LeftLowerLeg"
                 end
-                if ballCurrentlyInside and not mossWasInside and not mossCooldown then
-                    mossCooldown=true; playHeaderAnim(); fireKick(); task.delay(0.3,function() mossCooldown=false end)
-                end
-                mossWasInside=ballCurrentlyInside
+                local l = ch:FindFirstChild(ln)
+                if l then fti(l, t, 0); fti(l, t, 1) end
             end)
         end
     })
-end
 
-createMossButton("Xeno Moss 15%", 2, 2.8, 3)
-createMossButton("Xeno Moss 25%", 2.5, 3.2, 3.3)
-createMossButton("Xeno Moss 50%", 3, 3.8, 3.6)
-createMossButton("Xeno Moss 75%", 3.5, 4.5, 4.1)
-createMossButton("Xeno Moss 100%", 4, 5, 4.5)
+    Tabs.Reach:Input({
+        Title = "Reach Size",
+        Placeholder = "Size",
+        Callback = function(v) d_reach1 = tonumber(v) or d_reach1 end
+    })
 
---------------------------------------------------------------------------------
--- TAB 6: FLAG FUNC
---------------------------------------------------------------------------------
-Tabs.FlagFunc:Section({ Title = "Override specific flags easily." })
+    Tabs.Reach:Paragraph({ Title = "Reach [Method 2]", Desc = "NOT Xeno & Solara Support" })
 
-local _flags = {tt="4", interp="60", s2="38720"}
-local _thread_flag = nil
-local function strip(k) return k:gsub("^DFInt",""):gsub("^DFFlag",""):gsub("FString",""):gsub("FLog",""):gsub("^FFlag",""):gsub("^DFint",""):gsub("^FInt","") end
+    local reachSize      = Vector3.new(5,5,5)
+    local legReachEnabled = false
+    local reachConn      = nil
+    local shapeType      = "Box"
+    local transparency2  = 0.7
 
-local function applyFlags()
-    if not setfflag then return end
-    for raw,val in pairs({
-        ["DFIntTargetTimeDelayFacctorTenths"] = _flags.tt,
-        ["FIntInterpolationMaxDelayMSec"]     = _flags.interp,
-        ["DFIntS2PhysicsSenderRate"]          = _flags.s2,
-    }) do
-        local ck = strip(raw)
-        pcall(function()
-            if getfflag(ck)~=nil then setfflag(ck,val) elseif getfflag(raw)~=nil then setfflag(raw,val) end
+    local reachPart = Instance.new("Part")
+    reachPart.Anchored = true; reachPart.CanCollide = false
+    reachPart.Transparency = transparency2; reachPart.Color = Color3.fromRGB(0,85,255)
+    reachPart.Name = "ReachPart"; reachPart.Parent = workspace
+
+    local _root, _hum, _rleg, _lleg, _hasRleg, _hasLleg
+    local function refreshChar2(char)
+        if not char then return end
+        _root    = char:FindFirstChild("HumanoidRootPart")
+        _hum     = char:FindFirstChild("Humanoid")
+        _rleg    = char:FindFirstChild("RightLowerLeg") or char:FindFirstChild("Right Leg")
+        _lleg    = char:FindFirstChild("LeftLowerLeg")  or char:FindFirstChild("Left Leg")
+        _hasRleg = _rleg ~= nil; _hasLleg = _lleg ~= nil
+    end
+    refreshChar2(lp.Character)
+    lp.CharacterAdded:Connect(function(c) task.wait(); refreshChar2(c); c.ChildAdded:Connect(function() refreshChar2(c) end) end)
+
+    local function getBall()
+        local sys = workspace:FindFirstChild("TPSSystem")
+        return (sys and sys:FindFirstChild("TPS")) or workspace:FindFirstChild("Ball")
+    end
+
+    local function fireLeg(ball)
+        if _root  then fti(ball,_root,0);  fti(ball,_root,1)  end
+        if _hasRleg then fti(ball,_rleg,0); fti(ball,_rleg,1) end
+        if _hasLleg then fti(ball,_lleg,0); fti(ball,_lleg,1) end
+    end
+
+    local BUF_MAX = 8
+    local POS_BUF = {}
+    for i=1,BUF_MAX do POS_BUF[i]={t=0,pos=V3zero,vel=V3zero} end
+    local POS_HEAD, POS_LEN = 0, 0
+    local function recordBall(ball)
+        POS_HEAD=(POS_HEAD%BUF_MAX)+1
+        local s=POS_BUF[POS_HEAD]; s.t=clock(); s.pos=ball.Position; s.vel=ball.AssemblyLinearVelocity
+        if POS_LEN<BUF_MAX then POS_LEN=POS_LEN+1 end
+    end
+    local function getFrame(offset) return POS_BUF[((POS_HEAD-offset-1)%BUF_MAX)+1] end
+    local function smartPredict(ball, ahead)
+        if POS_LEN<2 then
+            if not ball then return V3zero,V3zero end
+            return ball.Position+ball.AssemblyLinearVelocity*ahead, ball.AssemblyLinearVelocity
+        end
+        local s2=getFrame(0); local s1=getFrame(1)
+        local dt=s2.t-s1.t; if dt<=0 then dt=0.016 end
+        local vpx=(s2.pos.X-s1.pos.X)/dt; local vpy=(s2.pos.Y-s1.pos.Y)/dt; local vpz=(s2.pos.Z-s1.pos.Z)/dt
+        local vrx=s2.vel.X; local vry=s2.vel.Y; local vrz=s2.vel.Z
+        local ddx=vrx-vpx; local ddy=vry-vpy; local ddz=vrz-vpz
+        local kb=clamp((ddx*ddx+ddy*ddy+ddz*ddz)/(35*35),0,1)
+        local blx=vpx*(1-kb)+vrx*kb; local bly=vpy*(1-kb)+vry*kb; local blz=vpz*(1-kb)+vrz*kb
+        local ax,ay,az=0,0,0
+        if POS_LEN>=3 then
+            local s0=getFrame(2); local dt0=s1.t-s0.t
+            if dt0>0 then
+                local v0x=(s1.pos.X-s0.pos.X)/dt0; local v0y=(s1.pos.Y-s0.pos.Y)/dt0; local v0z=(s1.pos.Z-s0.pos.Z)/dt0
+                local amax=120
+                ax=clamp((vpx-v0x)/dt,-amax,amax); ay=clamp((vpy-v0y)/dt,-amax,amax); az=clamp((vpz-v0z)/dt,-amax,amax)
+            end
+        end
+        local gravY=-9.8*ahead*ahead*(1-kb); local t=clamp(ahead,0.016,0.25); local half=0.5*t*t
+        return V3(s2.pos.X+blx*t+ax*half, s2.pos.Y+bly*t+ay*half+gravY, s2.pos.Z+blz*t+az*half), V3(blx,bly,blz)
+    end
+
+    local _cachedPing = 0.05
+    local _lastPingT  = 0
+    local HIGH_PING_MS = 0.10
+    local GRAV_HALF_SQ = -9.8*0.5*(1/60)*(1/60)
+    local INSIDE_THRESH = 2.5
+
+    local function startReach2()
+        if reachConn then reachConn:Disconnect() end
+        reachPart.Size = reachSize
+        reachConn = RunService.PreSimulation:Connect(function()
+            if not _root or not _hum then return end
+            local ball = getBall(); if not ball then return end
+            local now = clock()
+            if now-_lastPingT>=2 then _lastPingT=now; _cachedPing=clamp(lp:GetNetworkPing(),0.016,0.25) end
+            local ballPos = ball.Position
+            local rootPos = _root.Position
+            local qdx=ballPos.X-rootPos.X; local qdz=ballPos.Z-rootPos.Z
+            if abs(qdx)>16 or abs(qdz)>16 then return end
+            recordBall(ball)
+            local qdy=ballPos.Y-rootPos.Y
+            local rawDist=sqrt(qdx*qdx+qdy*qdy+qdz*qdz)
+            local ahead=_cachedPing+1/60
+            local predPos,predVel
+            if _cachedPing>=HIGH_PING_MS or rawDist>=7 then
+                predPos,predVel=smartPredict(ball,ahead)
+            else
+                predPos=ballPos; predVel=ball.AssemblyLinearVelocity
+            end
+            local pvx=predVel.X; local pvy=predVel.Y; local pvz=predVel.Z
+            local farPos=V3(predPos.X+pvx*(1/60), predPos.Y+pvy*(1/60)+GRAV_HALF_SQ, predPos.Z+pvz*(1/60))
+            local rx=reachSize.X/2; local ry=reachSize.Y/2; local rz=reachSize.Z/2
+            local dx=predPos.X-rootPos.X; local dy=predPos.Y-rootPos.Y; local dz=predPos.Z-rootPos.Z
+            local fdx=farPos.X-rootPos.X;  local fdy=farPos.Y-rootPos.Y;  local fdz=farPos.Z-rootPos.Z
+            if rawDist<INSIDE_THRESH then fireLeg(ball) end
+            if (abs(dx)<=rx and abs(dy)<=ry and abs(dz)<=rz) or (abs(fdx)<=rx and abs(fdy)<=ry and abs(fdz)<=rz) then
+                fireLeg(ball)
+            end
+            reachPart.CFrame = _root.CFrame
         end)
     end
-end
 
-Tabs.FlagFunc:Input({ Title = "TargetTimeDelay", Placeholder = "e.g. 4", Callback = function(v) if v and v ~= "" then _flags.tt = v end end })
-Tabs.FlagFunc:Input({ Title = "Interpolation", Placeholder = "e.g. 60", Callback = function(v) if v and v ~= "" then _flags.interp = v end end })
-Tabs.FlagFunc:Input({ Title = "PhysicsSenderRate", Placeholder = "e.g. 38720", Callback = function(v) if v and v ~= "" then _flags.s2 = v end end })
-
-Tabs.FlagFunc:Button({ Title = "Apply & Lock", Callback = function()
-    if _thread_flag then task.cancel(_thread_flag) end
-    _thread_flag = task.spawn(function() while true do applyFlags() task.wait(2) end end)
-end })
-Tabs.FlagFunc:Button({ Title = "Unlock", Callback = function()
-    if _thread_flag then task.cancel(_thread_flag); _thread_flag = nil end
-end })
-
-Tabs.FlagFunc:Section({ Title = "Paste your JSON flags below." })
-
-local _injectThread = nil
-local _injectFlags  = {}
-
-Tabs.FlagFunc:Input({
-    Title = "Flag JSON",
-    Placeholder = '{"DFIntTargetTimeDelayFacctorTenths":"7"}',
-    Callback = function(v)
-        if not v or v == "" then return end
-        local ok, decoded = pcall(function() return game:GetService("HttpService"):JSONDecode(v) end)
-        if ok and type(decoded) == "table" then _injectFlags = decoded end
+    local function stopReach2()
+        if reachConn then reachConn:Disconnect(); reachConn=nil end
+        reachPart.CFrame = CFrame.new(0,-9999,0)
     end
-})
 
-Tabs.FlagFunc:Button({ Title = "Inject & Lock All", Callback = function()
-    if _injectThread then task.cancel(_injectThread) end
-    _injectThread = task.spawn(function()
-        while true do
-            if setfflag then
-                for k, v in pairs(_injectFlags) do
+    Tabs.Reach:Dropdown({
+        Title = "Select Shape",
+        Values = {"Box","Sphere","Cylinder"},
+        Value = "Box",
+        Callback = function(v)
+            shapeType = v
+            if shapeType=="Box" then reachPart.Shape=Enum.PartType.Block
+            elseif shapeType=="Sphere" then reachPart.Shape=Enum.PartType.Ball
+            elseif shapeType=="Cylinder" then reachPart.Shape=Enum.PartType.Cylinder end
+            if legReachEnabled then startReach2() end
+        end
+    })
+
+    Tabs.Reach:Toggle({
+        Title = "Enable Reach [M2]",
+        Default = false,
+        Callback = function(v)
+            legReachEnabled = v
+            if v then startReach2() else stopReach2() end
+        end
+    })
+
+    Tabs.Reach:Slider({ Title = "Reach X", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(v,reachSize.Y,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
+    Tabs.Reach:Slider({ Title = "Reach Y", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(reachSize.X,v,reachSize.Z); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
+    Tabs.Reach:Slider({ Title = "Reach Z", Step = 1, Value = {Min = 1, Max = 50, Default = 5}, Callback = function(v) reachSize=Vector3.new(reachSize.X,reachSize.Y,v); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end })
+
+    Tabs.Reach:Input({
+        Title = "Sync Reach X Y Z",
+        Placeholder = "Size",
+        Callback = function(v)
+            local n=tonumber(v); if n then reachSize=Vector3.new(n,n,n); reachPart.Size=reachSize; if legReachEnabled then startReach2() end end
+        end
+    })
+
+    Tabs.Reach:Toggle({
+        Title = "Hide Box",
+        Default = false,
+        Callback = function(v)
+            transparency2 = v and 1 or 0.7
+            reachPart.Transparency = transparency2
+        end
+    })
+
+    --------------------------------------------------------------------------------
+    -- TAB 3: XENO & SOLARA REACH
+    --------------------------------------------------------------------------------
+    Tabs.XenoSolara:Paragraph({ Title = "Best Reach Method Provided", Desc = "" })
+
+    local reachEnabled3 = false
+    local shouldReEnable3 = false
+    local selectedLegName3 = "Right Leg"
+    local reachDistance3 = 16
+    local currentConnection3 = nil
+    local storedHip3 = nil
+
+    local function enableReach3()
+        if reachEnabled3 then return end
+        reachEnabled3 = true
+        shouldReEnable3 = true
+        local character = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        local leg = character:WaitForChild(selectedLegName3)
+
+        if character:FindFirstChild("Right Leg") then character["Right Leg"].Transparency = 1 end
+        if character:FindFirstChild("Left Leg") then character["Left Leg"].Transparency = 1 end
+
+        storedHip3 = character:FindFirstChild(selectedLegName3 == "Right Leg" and "Right Hip" or "Left Hip", true)
+        if storedHip3 then storedHip3.Enabled = false end
+
+        currentConnection3 = RunService.RenderStepped:Connect(function()
+            local TPSSystem = workspace:FindFirstChild("TPSSystem")
+            local TPS = TPSSystem and TPSSystem:FindFirstChild("TPS")
+            if not TPS or not hrp or not leg then return end
+            local direction = TPS.Position - hrp.Position
+            local distance = direction.Magnitude
+            if distance <= reachDistance3 then
+                leg.CFrame = TPS.CFrame
+            else
+                leg.CFrame = CFrame.new(hrp.Position + direction.Unit * reachDistance3)
+            end
+        end)
+    end
+
+    local function disableReach3()
+        reachEnabled3 = false
+        shouldReEnable3 = false
+        if currentConnection3 then currentConnection3:Disconnect(); currentConnection3 = nil end
+        local character = lp.Character
+        if character then
+            if character:FindFirstChild("Right Leg") then character["Right Leg"].Transparency = 0 end
+            if character:FindFirstChild("Left Leg") then character["Left Leg"].Transparency = 0 end
+        end
+        if storedHip3 then storedHip3.Enabled = true; storedHip3 = nil end
+    end
+
+    lp.CharacterAdded:Connect(function()
+        reachEnabled3 = false
+        storedHip3 = nil
+        if currentConnection3 then currentConnection3:Disconnect(); currentConnection3 = nil end
+        if shouldReEnable3 then
+            task.wait(0.25) 
+            local character = lp.Character or lp.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            if humanoid.RigType == Enum.HumanoidRigType.R6 then
+                character["Right Leg"].Transparency = 1
+                character["Left Leg"].Transparency = 1
+                character["Left Leg"].Massless = true
+                local LeftLegM = Instance.new("Part", character)
+                LeftLegM.Name = "Left Leg"; LeftLegM.CanCollide = false; LeftLegM.Color = character["Left Leg"].Color
+                LeftLegM.Size = Vector3.new(1,2,1); LeftLegM.Locked = true; LeftLegM.Position = character["Left Leg"].Position
+                local Attachment = Instance.new("Attachment", LeftLegM)
+                Attachment.Name = "LeftFootAttachment"; Attachment.Position = Vector3.new(0,-1,0)
+                local MotorHip = Instance.new("Motor6D", character.Torso)
+                MotorHip.Name = "Fake Left Hip"; MotorHip.C0 = CFrame.new(-1,-1,0,0,0,-1,0,1,0,1,0,0); MotorHip.C1 = CFrame.new(-0.5,1,0,0,0,-1,0,1,0,1,0,0)
+                MotorHip.MaxVelocity = 0.1; MotorHip.Part0 = character.Torso; MotorHip.Part1 = LeftLegM
+
+                character["Right Leg"].Massless = true
+                local RightLegM = Instance.new("Part", character)
+                RightLegM.Name = "Right Leg"; RightLegM.CanCollide = false; RightLegM.Color = character["Right Leg"].Color
+                RightLegM.Size = Vector3.new(1,2,1); RightLegM.Locked = true; RightLegM.Position = character["Right Leg"].Position
+                local Attachment2 = Instance.new("Attachment", RightLegM)
+                Attachment2.Name = "RightFootAttachment"; Attachment2.Position = Vector3.new(0,-1,0)
+                local MotorHip2 = Instance.new("Motor6D", character.Torso)
+                MotorHip2.Name = "Fake Right Hip"; MotorHip2.C0 = CFrame.new(1,-1,0,0,0,1,0,1,0,-1,0,0); MotorHip2.C1 = CFrame.new(0.5,1,0,0,0,1,0,1,0,-1,0,0)
+                MotorHip2.MaxVelocity = 0.1; MotorHip2.Part0 = character.Torso; MotorHip2.Part1 = RightLegM
+            end
+            enableReach3()
+        end
+    end)
+
+    Tabs.XenoSolara:Toggle({
+        Title = "Enable / Disable Reach",
+        Default = false,
+        Callback = function(v)
+            if v then enableReach3() else disableReach3() end
+        end
+    })
+
+    Tabs.XenoSolara:Slider({ Title = "Reach Size", Step = 1, Value = {Min = 1, Max = 25, Default = 16}, Callback = function(v) reachDistance3 = v end })
+
+    Tabs.XenoSolara:Button({
+        Title = "Fake Legs",
+        Callback = function()
+            local character = lp.Character or lp.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            if humanoid.RigType == Enum.HumanoidRigType.R6 then
+                character["Right Leg"].Transparency = 1
+                character["Left Leg"].Transparency = 1
+                character["Left Leg"].Massless = true
+                local LeftLegM = Instance.new("Part", character)
+                LeftLegM.Name = "Left Leg"; LeftLegM.CanCollide = false; LeftLegM.Color = character["Left Leg"].Color
+                LeftLegM.Size = Vector3.new(1, 2, 1); LeftLegM.Locked = true; LeftLegM.Position = character["Left Leg"].Position
+                local LeftAttachment = Instance.new("Attachment", LeftLegM)
+                LeftAttachment.Name = "LeftFootAttachment"; LeftAttachment.Position = Vector3.new(0, -1, 0)
+                local LeftMotor = Instance.new("Motor6D", character.Torso)
+                LeftMotor.Name = "Fake Left Hip"; LeftMotor.C0 = CFrame.new(-1, -1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0); LeftMotor.C1 = CFrame.new(-0.5, 1, 0, 0, 0, -1, 0, 1, 0, 1, 0, 0)
+                LeftMotor.MaxVelocity = 0.1; LeftMotor.Part0 = character.Torso; LeftMotor.Part1 = LeftLegM
+
+                character["Right Leg"].Massless = true
+                local RightLegM = Instance.new("Part", character)
+                RightLegM.Name = "Right Leg"; RightLegM.CanCollide = false; RightLegM.Color = character["Right Leg"].Color
+                RightLegM.Size = Vector3.new(1, 2, 1); RightLegM.Locked = true; RightLegM.Position = character["Right Leg"].Position
+                local RightAttachment = Instance.new("Attachment", RightLegM)
+                RightAttachment.Name = "RightFootAttachment"; RightAttachment.Position = Vector3.new(0, -1, 0)
+                local RightMotor = Instance.new("Motor6D", character.Torso)
+                RightMotor.Name = "Fake Right Hip"; RightMotor.C0 = CFrame.new(1, -1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0); RightMotor.C1 = CFrame.new(0.5, 1, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0)
+                RightMotor.MaxVelocity = 0.1; RightMotor.Part0 = character.Torso; RightMotor.Part1 = RightLegM
+            end
+        end
+    })
+
+    --------------------------------------------------------------------------------
+    -- TAB 4: REACT
+    --------------------------------------------------------------------------------
+    Tabs.React:Paragraph({ Title = "Delay Settings", Desc = "15% = highest delay (safer), 100% = lowest delay (most aggressive)." })
+
+    local function applyReact(tt, interp)
+        local function strip(k) return k:gsub("^DFInt",""):gsub("^DFFlag",""):gsub("FString",""):gsub("FLog",""):gsub("^FFlag",""):gsub("^DFint",""):gsub("^FInt","") end
+        task.spawn(function()
+            local flags = { ["DFIntTargetTimeDelayFacctorTenths"] = tt, ["FIntInterpolationMaxDelayMSec"] = interp }
+            local function apply()
+                if not setfflag then return end
+                for k,v in pairs(flags) do
                     local ck = strip(k)
-                    pcall(function()
-                        if getfflag(ck) ~= nil then setfflag(ck, tostring(v)) elseif getfflag(k) ~= nil then setfflag(k, tostring(v)) end
-                    end)
+                    pcall(function() if getfflag(ck)~=nil then setfflag(ck,v) elseif getfflag(k)~=nil then setfflag(k,v) end end)
                 end
             end
-            task.wait(10)
-        end
-    end)
-end })
-
-Tabs.FlagFunc:Button({ Title = "Stop Inject", Callback = function()
-    if _injectThread then task.cancel(_injectThread); _injectThread = nil end
-end })
-
---------------------------------------------------------------------------------
--- TAB 7: FREEWILL
---------------------------------------------------------------------------------
-Tabs.FreeWill:Section({ Title = "Auto directional kick. Rides the ball based on camera." })
-
-local Camera = workspace.CurrentCamera
-local freewillLoop = nil
-local REACH_FW = 5
-local HEIGHT_FW = 3.1 
-
-local function getFreewillBall()
-    local tps = workspace:FindFirstChild("TPSSystem")
-    return tps and tps:FindFirstChild("TPS") or workspace:FindFirstChild("Ball")
-end
-
-local function directionalKick(hrp, ball)
-    for i = 1, 25 do 
-        fti(hrp, ball, 0)
-        fti(hrp, ball, 1) 
+            while true do apply() task.wait(20) end
+        end)
     end
-end
 
-local function setFreewillState(state)
-    if state then
-        freewillLoop = RunService.Heartbeat:Connect(function()
-            local char = lp.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            local ball = getFreewillBall()
-            if hrp and ball then
-                hrp.AssemblyLinearVelocity = Vector3.zero
-                local camLook = Camera.CFrame.LookVector
-                hrp.CFrame = CFrame.new(
-                    ball.Position + Vector3.new(0, HEIGHT_FW, 0), 
-                    ball.Position + Vector3.new(camLook.X, HEIGHT_FW, camLook.Z)
-                )
-                if (hrp.Position - ball.Position).Magnitude <= REACH_FW then 
-                    directionalKick(hrp, ball) 
+    Tabs.React:Button({ Title = "React 15%", Callback = function() applyReact("13","90") end })
+    Tabs.React:Button({ Title = "React 25%", Callback = function() applyReact("12","85") end })
+    Tabs.React:Button({ Title = "React 50%", Callback = function() applyReact("10","75") end })
+    Tabs.React:Button({ Title = "React 75%", Callback = function() applyReact("8","67") end })
+    Tabs.React:Button({ Title = "React 100%", Callback = function() applyReact("7","60") end })
+
+    --------------------------------------------------------------------------------
+    -- TAB 5: XENO MOSS
+    --------------------------------------------------------------------------------
+    Tabs.XenoMoss:Paragraph({ Title = "Moss for Xeno & Solara", Desc = "Pick your %. Higher % = bigger hitbox." })
+
+    local function createMossButton(title, bx, by, bz)
+        Tabs.XenoMoss:Button({
+            Title = title,
+            Callback = function()
+                local BOX_X=bx; local BOX_Y=by; local BOX_Z=bz; local BOX_Y_OFFSET=1.5
+                local function isBoxTouching(pCF,pSz,tCF,tSz)
+                    local pMin=pCF.Position-pSz/2; local pMax=pCF.Position+pSz/2
+                    local tMin=tCF.Position-tSz/2; local tMax=tCF.Position+tSz/2
+                    return (pMin.X<=tMax.X and pMax.X>=tMin.X) and (pMin.Y<=tMax.Y and pMax.Y>=tMin.Y) and (pMin.Z<=tMax.Z and pMax.Z>=tMin.Z)
                 end
+                local headerAnim=Instance.new("Animation"); headerAnim.AnimationId="rbxassetid://301501585"
+                local currentTrack=nil
+                local function playHeaderAnim()
+                    local char=lp.Character; if not char then return end
+                    local hum=char:FindFirstChildOfClass("Humanoid"); if not hum then return end
+                    if currentTrack and currentTrack.IsPlaying then return end
+                    pcall(function() currentTrack=hum:LoadAnimation(headerAnim); currentTrack:Play() end)
+                end
+                local function fireKick()
+                    local TPSSystem=workspace:FindFirstChild("TPSSystem")
+                    local TPS=TPSSystem and TPSSystem:FindFirstChild("TPS"); if not TPS then return end
+                    local FE=workspace:FindFirstChild("FE")
+                    local remote=FE and FE:FindFirstChild("System") and FE.System:FindFirstChild("Header"); if not remote then return end
+                    remote:FireServer(lp.UserId,TPS,"Rock'n'roll Star","NeverFearTruth","power=95/100")
+                end
+                local mossWasInside=false; local mossCooldown=false
+                RunService.Heartbeat:Connect(function()
+                    local char=lp.Character; if not char then return end
+                    local head=char:FindFirstChild("Head"); if not head then return end
+                    local hrp=char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
+                    local raisedCFrame=head.CFrame*CFrame.new(0,BOX_Y_OFFSET,0)
+                    local boxSize=Vector3.new(BOX_X,BOX_Y,BOX_Z)
+                    local targets={}
+                    local BallsFolder=workspace:FindFirstChild("Balls")
+                    if BallsFolder then for _,ball in BallsFolder:GetChildren() do if ball:IsA("BasePart") then table.insert(targets,ball) end end end
+                    local TPSSystem=workspace:FindFirstChild("TPSSystem")
+                    if TPSSystem then for _,tpsPart in TPSSystem:GetChildren() do if tpsPart:IsA("BasePart") or tpsPart.Name=="TPS" then table.insert(targets,tpsPart) end end end
+                    local ballCurrentlyInside=false
+                    for _,target in targets do
+                        local predictedPos=target.Position+target.Velocity*0.001
+                        local predictedCFrame=CFrame.new(predictedPos)*target.CFrame.Rotation
+                        if target.Position.Y>=hrp.Position.Y+1 then
+                            if isBoxTouching(raisedCFrame,boxSize,predictedCFrame,target.Size) then ballCurrentlyInside=true; break end
+                        end
+                    end
+                    if ballCurrentlyInside and not mossWasInside and not mossCooldown then
+                        mossCooldown=true; playHeaderAnim(); fireKick(); task.delay(0.3,function() mossCooldown=false end)
+                    end
+                    mossWasInside=ballCurrentlyInside
+                end)
+            end
+        })
+    end
+
+    createMossButton("Xeno Moss 15%", 2, 2.8, 3)
+    createMossButton("Xeno Moss 25%", 2.5, 3.2, 3.3)
+    createMossButton("Xeno Moss 50%", 3, 3.8, 3.6)
+    createMossButton("Xeno Moss 75%", 3.5, 4.5, 4.1)
+    createMossButton("Xeno Moss 100%", 4, 5, 4.5)
+
+    --------------------------------------------------------------------------------
+    -- TAB 6: FLAG FUNC
+    --------------------------------------------------------------------------------
+    Tabs.FlagFunc:Paragraph({ Title = "Flag Override", Desc = "Override specific flags easily." })
+
+    local _flags = {tt="4", interp="60", s2="38720"}
+    local _thread_flag = nil
+    local function strip(k) return k:gsub("^DFInt",""):gsub("^DFFlag",""):gsub("FString",""):gsub("FLog",""):gsub("^FFlag",""):gsub("^DFint",""):gsub("^FInt","") end
+
+    local function applyFlags()
+        if not setfflag then return end
+        for raw,val in pairs({
+            ["DFIntTargetTimeDelayFacctorTenths"] = _flags.tt,
+            ["FIntInterpolationMaxDelayMSec"]     = _flags.interp,
+            ["DFIntS2PhysicsSenderRate"]          = _flags.s2,
+        }) do
+            local ck = strip(raw)
+            pcall(function()
+                if getfflag(ck)~=nil then setfflag(ck,val) elseif getfflag(raw)~=nil then setfflag(raw,val) end
+            end)
+        end
+    end
+
+    Tabs.FlagFunc:Input({ Title = "TargetTimeDelay", Placeholder = "e.g. 4", Callback = function(v) if v and v ~= "" then _flags.tt = v end end })
+    Tabs.FlagFunc:Input({ Title = "Interpolation", Placeholder = "e.g. 60", Callback = function(v) if v and v ~= "" then _flags.interp = v end end })
+    Tabs.FlagFunc:Input({ Title = "PhysicsSenderRate", Placeholder = "e.g. 38720", Callback = function(v) if v and v ~= "" then _flags.s2 = v end end })
+
+    Tabs.FlagFunc:Button({ Title = "Apply & Lock", Callback = function()
+        if _thread_flag then task.cancel(_thread_flag) end
+        _thread_flag = task.spawn(function() while true do applyFlags() task.wait(2) end end)
+    end })
+    Tabs.FlagFunc:Button({ Title = "Unlock", Callback = function()
+        if _thread_flag then task.cancel(_thread_flag); _thread_flag = nil end
+    end })
+
+    Tabs.FlagFunc:Paragraph({ Title = "Flag Inject", Desc = "Paste your JSON flags below." })
+
+    local _injectThread = nil
+    local _injectFlags  = {}
+
+    Tabs.FlagFunc:Input({
+        Title = "Flag JSON",
+        Placeholder = '{"DFIntTargetTimeDelayFacctorTenths":"7"}',
+        Callback = function(v)
+            if not v or v == "" then return end
+            local ok, decoded = pcall(function() return game:GetService("HttpService"):JSONDecode(v) end)
+            if ok and type(decoded) == "table" then _injectFlags = decoded end
+        end
+    })
+
+    Tabs.FlagFunc:Button({ Title = "Inject & Lock All", Callback = function()
+        if _injectThread then task.cancel(_injectThread) end
+        _injectThread = task.spawn(function()
+            while true do
+                if setfflag then
+                    for k, v in pairs(_injectFlags) do
+                        local ck = strip(k)
+                        pcall(function()
+                            if getfflag(ck) ~= nil then setfflag(ck, tostring(v)) elseif getfflag(k) ~= nil then setfflag(k, tostring(v)) end
+                        end)
+                    end
+                end
+                task.wait(10)
             end
         end)
-    else
-        if freewillLoop then freewillLoop:Disconnect(); freewillLoop = nil end
+    end })
+
+    Tabs.FlagFunc:Button({ Title = "Stop Inject", Callback = function()
+        if _injectThread then task.cancel(_injectThread); _injectThread = nil end
+    end })
+
+    --------------------------------------------------------------------------------
+    -- TAB 7: FREEWILL
+    --------------------------------------------------------------------------------
+    Tabs.FreeWill:Paragraph({ Title = "Freewill", Desc = "Auto directional kick. Rides the ball based on camera." })
+
+    local Camera = workspace.CurrentCamera
+    local freewillLoop = nil
+    local REACH_FW = 5
+    local HEIGHT_FW = 3.1 
+
+    local function getFreewillBall()
+        local tps = workspace:FindFirstChild("TPSSystem")
+        return tps and tps:FindFirstChild("TPS") or workspace:FindFirstChild("Ball")
     end
-end
 
-Tabs.FreeWill:Toggle({
-    Title = "Enable Freewill",
-    Default = false,
-    Callback = function(state) setFreewillState(state) end
-})
+    local function directionalKick(hrp, ball)
+        for i = 1, 25 do 
+            fti(hrp, ball, 0)
+            fti(hrp, ball, 1) 
+        end
+    end
 
---------------------------------------------------------------------------------
--- TAB 8: AVATAR STEALER
---------------------------------------------------------------------------------
-Tabs.AvatarSteal:Section({ Title = "Enter a Username or User ID to steal avatar." })
-
-local function forceWeldAccessory(accessory, char)
-    local handle = accessory:FindFirstChild("Handle")
-    if not handle then return end
-    
-    handle.Anchored = false
-    handle.CanCollide = false
-    handle.Massless = true
-    
-    local handleAttachment = handle:FindFirstChildOfClass("Attachment")
-    local charPart = char:FindFirstChild("Head") 
-    local charAttachment = nil
-    
-    if handleAttachment then
-        for _, part in pairs(char:GetChildren()) do
-            if part:IsA("BasePart") then
-                local found = part:FindFirstChild(handleAttachment.Name)
-                if found and found:IsA("Attachment") then
-                    charPart = part
-                    charAttachment = found
-                    break
+    local function setFreewillState(state)
+        if state then
+            freewillLoop = RunService.Heartbeat:Connect(function()
+                local char = lp.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                local ball = getFreewillBall()
+                if hrp and ball then
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                    local camLook = Camera.CFrame.LookVector
+                    hrp.CFrame = CFrame.new(
+                        ball.Position + Vector3.new(0, HEIGHT_FW, 0), 
+                        ball.Position + Vector3.new(camLook.X, HEIGHT_FW, camLook.Z)
+                    )
+                    if (hrp.Position - ball.Position).Magnitude <= REACH_FW then 
+                        directionalKick(hrp, ball) 
+                    end
                 end
-            end
-        end
-    end
-    
-    accessory.Parent = char
-    local weld = Instance.new("Weld")
-    weld.Name = "AccessoryWeld"
-    weld.Part0 = charPart
-    weld.Part1 = handle
-    
-    if charAttachment and handleAttachment then
-        weld.C0 = charAttachment.CFrame
-        weld.C1 = handleAttachment.CFrame
-    else
-        if charPart.Name == "Head" then
-            weld.C0 = CFrame.new(0, charPart.Size.Y / 2, 0)
-            weld.C1 = CFrame.new(0, -handle.Size.Y / 2, 0)
-        end
-    end
-    weld.Parent = handle
-end
-
-local function applyStolenAvatar(targetNameOrId)
-    local char = lp.Character
-    local humanoid = char and char:FindFirstChildOfClass("Humanoid")
-    if not char or not humanoid then return end
-
-    local successId, targetId = pcall(function() 
-        return tonumber(targetNameOrId) or Players:GetUserIdFromNameAsync(targetNameOrId) 
-    end)
-    
-    if not successId or not targetId then 
-        WindUI:Notify({Title = "Error", Content = "Could not find user: " .. tostring(targetNameOrId), Duration = 3})
-        return 
-    end
-
-    local successApp, appearanceModel = pcall(function()
-        return Players:GetCharacterAppearanceAsync(targetId)
-    end)
-
-    if successApp and appearanceModel then
-        for _, obj in pairs(char:GetChildren()) do
-            if obj:IsA("Accoutrement") or obj:IsA("Accessory") then
-                local handle = obj:FindFirstChild("Handle")
-                if handle then handle.Transparency = 1 end
-            elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("ShirtGraphic") or obj:IsA("BodyColors") then
-                obj:Destroy() 
-            end
-        end
-
-        for _, item in pairs(appearanceModel:GetChildren()) do
-            if item:IsA("Accoutrement") or item:IsA("Accessory") then
-                forceWeldAccessory(item, char)
-            elseif item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") then
-                item.Parent = char
-            elseif item:IsA("Decal") and (item.Name == "face" or item.Name == "Face") then
-                local head = char:FindFirstChild("Head")
-                if head then
-                    local currentFace = head:FindFirstChildOfClass("Decal")
-                    if currentFace then currentFace:Destroy() end
-                    item.Parent = head
-                end
-            end
-        end
-        WindUI:Notify({Title = "Success", Content = "Stole avatar! Force-welded successfully.", Duration = 3})
-    else
-        WindUI:Notify({Title = "Error", Content = "Failed to load appearance data.", Duration = 3})
-    end
-end
-
-Tabs.AvatarSteal:Input({
-    Title = "Target Username / ID",
-    Placeholder = "Enter Name/ID",
-    Callback = function(v)
-        if v and v ~= "" then
-            applyStolenAvatar(v)
-        end
-    end
-})
-
-Tabs.AvatarSteal:Button({
-    Title = "Reset to Original",
-    Callback = function()
-        if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
-            lp.Character:FindFirstChildOfClass("Humanoid").Health = 0
-            WindUI:Notify({Title = "Resetting", Content = "Respawning to restore your original avatar...", Duration = 3})
-        end
-    end
-})
-
---------------------------------------------------------------------------------
--- TAB 9: SKY CHANGER
---------------------------------------------------------------------------------
-Tabs.SkyChanger:Section({ Title = "Change your environment entirely." })
-
-local SkyPresets = {
-    ["Purple Galaxy"] = {
-        SkyboxBk = "rbxassetid://159454299",
-        SkyboxDn = "rbxassetid://159454296",
-        SkyboxFt = "rbxassetid://159454293",
-        SkyboxLf = "rbxassetid://159454286",
-        SkyboxRt = "rbxassetid://159454300",
-        SkyboxUp = "rbxassetid://159454288"
-    },
-    ["Vaporwave"] = {
-        SkyboxBk = "rbxassetid://141750530",
-        SkyboxDn = "rbxassetid://141750542",
-        SkyboxFt = "rbxassetid://141750508",
-        SkyboxLf = "rbxassetid://141750519",
-        SkyboxRt = "rbxassetid://141750550",
-        SkyboxUp = "rbxassetid://141750558"
-    },
-    ["Aesthetic Night"] = {
-        SkyboxBk = "rbxassetid://1045964490",
-        SkyboxDn = "rbxassetid://1045964368",
-        SkyboxFt = "rbxassetid://1045964655",
-        SkyboxLf = "rbxassetid://1045964655",
-        SkyboxRt = "rbxassetid://1045964655",
-        SkyboxUp = "rbxassetid://1045962969"
-    },
-    ["Red Space"] = {
-        SkyboxBk = "rbxassetid://2189851600",
-        SkyboxDn = "rbxassetid://2189849202",
-        SkyboxFt = "rbxassetid://2189852232",
-        SkyboxLf = "rbxassetid://2189849503",
-        SkyboxRt = "rbxassetid://2189849896",
-        SkyboxUp = "rbxassetid://2189850383"
-    }
-}
-
-local function applySky(presetName)
-    local preset = SkyPresets[presetName]
-    if not preset then return end
-    
-    local sky = Lighting:FindFirstChildOfClass("Sky")
-    if not sky then
-        sky = Instance.new("Sky")
-        sky.Parent = Lighting
-    end
-    
-    sky.SkyboxBk = preset.SkyboxBk
-    sky.SkyboxDn = preset.SkyboxDn
-    sky.SkyboxFt = preset.SkyboxFt
-    sky.SkyboxLf = preset.SkyboxLf
-    sky.SkyboxRt = preset.SkyboxRt
-    sky.SkyboxUp = preset.SkyboxUp
-    
-    WindUI:Notify({Title = "Sky Changed", Content = "Applied " .. presetName, Duration = 2})
-end
-
-local skyOptions = {}
-for name, _ in pairs(SkyPresets) do table.insert(skyOptions, name) end
-
-Tabs.SkyChanger:Dropdown({
-    Title = "Select Skybox",
-    Values = skyOptions,
-    Value = "Purple Galaxy",
-    Callback = function(v)
-        applySky(v)
-    end
-})
-
-Tabs.SkyChanger:Button({
-    Title = "Restore Original Sky",
-    Callback = function()
-        local sky = Lighting:FindFirstChildOfClass("Sky")
-        if sky then sky:Destroy() end
-        if originalSky then
-            originalSky:Clone().Parent = Lighting
-            WindUI:Notify({Title = "Restored", Content = "Original sky restored.", Duration = 2})
+            end)
         else
-            WindUI:Notify({Title = "Error", Content = "No original sky found.", Duration = 2})
+            if freewillLoop then freewillLoop:Disconnect(); freewillLoop = nil end
         end
     end
-})
 
-WindUI:Notify({
-    Title = "Ascend",
-    Content = "WindUI Injection Successful!",
-    Duration = 5
-})
+    Tabs.FreeWill:Toggle({
+        Title = "Enable Freewill",
+        Default = false,
+        Callback = function(state) setFreewillState(state) end
+    })
+
+    --------------------------------------------------------------------------------
+    -- TAB 8: AVATAR STEALER
+    --------------------------------------------------------------------------------
+    Tabs.AvatarSteal:Paragraph({ Title = "Avatar Stealer", Desc = "Enter a Username or User ID to perfectly copy their avatar." })
+
+    local function forceWeldAccessory(accessory, char)
+        local handle = accessory:FindFirstChild("Handle")
+        if not handle then return end
+        
+        handle.Anchored = false
+        handle.CanCollide = false
+        handle.Massless = true
+        
+        local handleAttachment = handle:FindFirstChildOfClass("Attachment")
+        local charPart = char:FindFirstChild("Head") 
+        local charAttachment = nil
+        
+        if handleAttachment then
+            for _, part in pairs(char:GetChildren()) do
+                if part:IsA("BasePart") then
+                    local found = part:FindFirstChild(handleAttachment.Name)
+                    if found and found:IsA("Attachment") then
+                        charPart = part
+                        charAttachment = found
+                        break
+                    end
+                end
+            end
+        end
+        
+        accessory.Parent = char
+        local weld = Instance.new("Weld")
+        weld.Name = "AccessoryWeld"
+        weld.Part0 = charPart
+        weld.Part1 = handle
+        
+        if charAttachment and handleAttachment then
+            weld.C0 = charAttachment.CFrame
+            weld.C1 = handleAttachment.CFrame
+        else
+            if charPart.Name == "Head" then
+                weld.C0 = CFrame.new(0, charPart.Size.Y / 2, 0)
+                weld.C1 = CFrame.new(0, -handle.Size.Y / 2, 0)
+            end
+        end
+        weld.Parent = handle
+    end
+
+    local function applyStolenAvatar(targetNameOrId)
+        local char = lp.Character
+        local humanoid = char and char:FindFirstChildOfClass("Humanoid")
+        if not char or not humanoid then return end
+
+        local successId, targetId = pcall(function() 
+            return tonumber(targetNameOrId) or Players:GetUserIdFromNameAsync(targetNameOrId) 
+        end)
+        
+        if not successId or not targetId then 
+            return 
+        end
+
+        local successApp, appearanceModel = pcall(function()
+            return Players:GetCharacterAppearanceAsync(targetId)
+        end)
+
+        if successApp and appearanceModel then
+            for _, obj in pairs(char:GetChildren()) do
+                if obj:IsA("Accoutrement") or obj:IsA("Accessory") then
+                    local handle = obj:FindFirstChild("Handle")
+                    if handle then handle.Transparency = 1 end
+                elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("ShirtGraphic") or obj:IsA("BodyColors") then
+                    obj:Destroy() 
+                end
+            end
+
+            for _, item in pairs(appearanceModel:GetChildren()) do
+                if item:IsA("Accoutrement") or item:IsA("Accessory") then
+                    forceWeldAccessory(item, char)
+                elseif item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") then
+                    item.Parent = char
+                elseif item:IsA("Decal") and (item.Name == "face" or item.Name == "Face") then
+                    local head = char:FindFirstChild("Head")
+                    if head then
+                        local currentFace = head:FindFirstChildOfClass("Decal")
+                        if currentFace then currentFace:Destroy() end
+                        item.Parent = head
+                    end
+                end
+            end
+        end
+    end
+
+    Tabs.AvatarSteal:Input({
+        Title = "Target Username / ID",
+        Placeholder = "Enter Name/ID",
+        Callback = function(v)
+            if v and v ~= "" then
+                applyStolenAvatar(v)
+            end
+        end
+    })
+
+    Tabs.AvatarSteal:Button({
+        Title = "Reset to Original",
+        Callback = function()
+            if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+                lp.Character:FindFirstChildOfClass("Humanoid").Health = 0
+            end
+        end
+    })
+
+    --------------------------------------------------------------------------------
+    -- TAB 9: SKY CHANGER
+    --------------------------------------------------------------------------------
+    Tabs.SkyChanger:Paragraph({ Title = "Skybox Editor", Desc = "Change your environment entirely." })
+
+    local SkyPresets = {
+        ["Purple Galaxy"] = {
+            SkyboxBk = "rbxassetid://159454299", SkyboxDn = "rbxassetid://159454296",
+            SkyboxFt = "rbxassetid://159454293", SkyboxLf = "rbxassetid://159454286",
+            SkyboxRt = "rbxassetid://159454300", SkyboxUp = "rbxassetid://159454288"
+        },
+        ["Vaporwave"] = {
+            SkyboxBk = "rbxassetid://141750530", SkyboxDn = "rbxassetid://141750542",
+            SkyboxFt = "rbxassetid://141750508", SkyboxLf = "rbxassetid://141750519",
+            SkyboxRt = "rbxassetid://141750550", SkyboxUp = "rbxassetid://141750558"
+        },
+        ["Aesthetic Night"] = {
+            SkyboxBk = "rbxassetid://1045964490", SkyboxDn = "rbxassetid://1045964368",
+            SkyboxFt = "rbxassetid://1045964655", SkyboxLf = "rbxassetid://1045964655",
+            SkyboxRt = "rbxassetid://1045964655", SkyboxUp = "rbxassetid://1045962969"
+        },
+        ["Red Space"] = {
+            SkyboxBk = "rbxassetid://2189851600", SkyboxDn = "rbxassetid://2189849202",
+            SkyboxFt = "rbxassetid://2189852232", SkyboxLf = "rbxassetid://2189849503",
+            SkyboxRt = "rbxassetid://2189849896", SkyboxUp = "rbxassetid://2189850383"
+        }
+    }
+
+    local function applySky(presetName)
+        local preset = SkyPresets[presetName]
+        if not preset then return end
+        
+        local sky = Lighting:FindFirstChildOfClass("Sky")
+        if not sky then
+            sky = Instance.new("Sky")
+            sky.Parent = Lighting
+        end
+        
+        sky.SkyboxBk = preset.SkyboxBk; sky.SkyboxDn = preset.SkyboxDn
+        sky.SkyboxFt = preset.SkyboxFt; sky.SkyboxLf = preset.SkyboxLf
+        sky.SkyboxRt = preset.SkyboxRt; sky.SkyboxUp = preset.SkyboxUp
+    end
+
+    local skyOptions = {}
+    for name, _ in pairs(SkyPresets) do table.insert(skyOptions, name) end
+
+    Tabs.SkyChanger:Dropdown({
+        Title = "Select Skybox",
+        Values = skyOptions,
+        Value = "Purple Galaxy",
+        Callback = function(v)
+            applySky(v)
+        end
+    })
+
+    Tabs.SkyChanger:Button({
+        Title = "Restore Original Sky",
+        Callback = function()
+            local sky = Lighting:FindFirstChildOfClass("Sky")
+            if sky then sky:Destroy() end
+            if originalSky then
+                originalSky:Clone().Parent = Lighting
+            end
+        end
+    })
+    
+end)
+
+-- Error Catching: If anything in the UI generation fails, it alerts you immediately instead of doing nothing.
+if not successUI then
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Ascend UI Error",
+        Text = tostring(errUI),
+        Duration = 15
+    })
+end
